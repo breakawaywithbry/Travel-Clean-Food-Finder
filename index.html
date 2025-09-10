@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Clean: Food Finder</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font for a clean look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FBF7F0; /* Light tan background */
+            color: #4A2E1F; /* Dark brown text */
+        }
+        .text-same-color {
+            color: #6C4832; /* A warm, medium brown for titles */
+        }
+        .text-same-color-subtitle {
+            color: #6C4832; /* Same color as the title for the subtitle */
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex items-center justify-center min-h-screen">
+
+    <div class="max-w-4xl w-full p-6 sm:p-8 bg-amber-50 rounded-xl shadow-lg border border-amber-200">
+        <!-- Title and Subtitle -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-same-color mb-2">
+                <span class="inline-block align-middle mr-2">✈️</span>Travel Clean: Food Finder
+            </h1>
+            <p class="text-lg sm:text-xl font-medium text-same-color-subtitle">
+                Discover whole food meals from countries around the world
+            </p>
+        </div>
+
+        <!-- Dropdown Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <!-- Continent Dropdown -->
+            <div class="flex flex-col">
+                <label for="continent-select" class="font-semibold text-sm mb-2 text-amber-800">Select a Continent</label>
+                <select id="continent-select" class="p-3 bg-amber-100 border border-amber-300 rounded-lg text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <option value="">-- Choose a Continent --</option>
+                </select>
+            </div>
+            
+            <!-- Country Dropdown -->
+            <div class="flex flex-col">
+                <label for="country-select" class="font-semibold text-sm mb-2 text-amber-800">Select a Country</label>
+                <select id="country-select" class="p-3 bg-amber-100 border border-amber-300 rounded-lg text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500" disabled>
+                    <option value="">-- Choose a Country --</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Meal Results Display -->
+        <div id="meals-output" class="space-y-6">
+            <!-- Meal cards will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Data structure containing all the meal information
+        const foodData = {
+            "North America & Caribbean": {
+                "Canada": [
+                    { type: "Breakfast", local: "Oatmeal with Berries", english: "Oatmeal with Berries", ingredients: "Oats, milk, blueberries, maple syrup", significance: "Hearty warming breakfast widely eaten in Canada." },
+                    { type: "Lunch", local: "Poutine (lighter)", english: "Fries with Gravy and Cheese Curds", ingredients: "Potatoes, cheese curds, light gravy", significance: "Quebec-origin lunch often enjoyed across Canada." },
+                    { type: "Dinner", local: "Cedar-Planked Salmon", english: "Grilled Salmon on Cedar", ingredients: "Salmon, cedar plank, lemon, dill", significance: "Indigenous West Coast dinner tradition." }
+                ],
+                "Greenland": [
+                    { type: "Breakfast", local: "Rugbrød with Smoked Fish", english: "Rye Bread with Smoked Fish", ingredients: "Rye bread, smoked fish, butter", significance: "Simple Arctic breakfast common in Greenland." },
+                    { type: "Lunch", local: "Suaasat", english: "Seal or Meat Soup", ingredients: "Seal/game meat, potatoes, barley, onion", significance: "Traditional warming lunch in Greenland." },
+                    { type: "Dinner", local: "Grilled Muskox", english: "Muskox with Root Vegetables", ingredients: "Muskox meat, herbs, root vegetables", significance: "Hearty polar-region dinner." }
+                ],
+                "Mexico": [
+                    { type: "Breakfast", local: "Chilaquiles", english: "Tortilla Chips with Salsa and Egg", ingredients: "Tortilla chips, salsa, cheese, fried egg", significance: "Popular traditional Mexican breakfast." },
+                    { type: "Lunch", local: "Tacos al Pastor", english: "Marinated Pork Tacos", ingredients: "Pork, pineapple, corn tortillas, onion", significance: "Classic street-food lunch in Mexico." },
+                    { type: "Dinner", local: "Pozole", english: "Hominy and Meat Stew", ingredients: "Hominy, pork/chicken, chili, cabbage, radish", significance: "Festive traditional Mexican dinner." }
+                ],
+                "United States of America": [
+                    { type: "Breakfast", local: "Buttermilk Pancakes", english: "Pancakes with Maple Syrup", ingredients: "Flour, eggs, milk, maple syrup", significance: "Classic American breakfast." },
+                    { type: "Lunch", local: "Turkey and Greens Sandwich", english: "Roast Turkey Sandwich", ingredients: "Whole-grain bread, turkey, greens, tomato", significance: "Common quick lunch across the USA." },
+                    { type: "Dinner", local: "Smoked Barbecue Ribs", english: "Smoked Pork Ribs", ingredients: "Pork ribs, dry rub, barbecue sauce", significance: "Regional American dinner classic." }
+                ],
+                "Antigua and Barbuda": [
+                    { type: "Breakfast", local: "Saltfish and Johnnycakes", english: "Salted Fish with Fried Bread", ingredients: "Saltfish, flour, cornmeal, oil", significance: "Traditional Antiguan breakfast combining preserved fish and fried dough." },
+                    { type: "Lunch", local: "Pepperpot", english: "Hearty Meat Stew", ingredients: "Beef/pork, cassareep, okra, spinach, spices", significance: "Slow-cooked national stew with Amerindian and African roots." },
+                    { type: "Dinner", local: "Grilled Caribbean Lobster", english: "Grilled Lobster with Herbs", ingredients: "Lobster, garlic, butter, lime, herbs", significance: "Popular island dinner, often for special occasions." }
+                ],
+                "Bahamas": [
+                    { type: "Breakfast", local: "Johnnycake with Salted Fish", english: "Cornmeal Bread and Salted Fish", ingredients: "Johnnycake (cornmeal bread), salted fish, butter", significance: "Simple Bahamian breakfast bread often paired with fish." },
+                    { type: "Lunch", local: "Conch Salad", english: "Citrus-Marinated Conch", ingredients: "Conch, lime, tomato, onion, pepper, herbs", significance: "Fresh, citrusy salad popular across the islands." },
+                    { type: "Dinner", local: "Steamed Grouper with Peas & Rice", english: "Fish with Rice and Peas", ingredients: "Grouper, rice, pigeon peas, coconut milk, spices", significance: "Comforting seafood dinner common in Bahamian households." }
+                ],
+                "Barbados": [
+                    { type: "Breakfast", local: "Bakes and Saltfish", english: "Fried Dough with Salted Fish", ingredients: "Flour, yeast, salt, saltfish, onions", significance: "Classic Bajan breakfast pairing fried bread with seasoned saltfish." },
+                    { type: "Lunch", local: "Cou-Cou and Flying Fish", english: "Cornmeal Porridge with Fish", ingredients: "Cornmeal (cou-cou), okra, flying fish, butter", significance: "National dish of Barbados often eaten at lunch." },
+                    { type: "Dinner", local: "Pudding and Souse", english: "Pickled Pork with Sweet Potatoes", ingredients: "Pickled pork, sweet potatoes, cucumber, onion, spices", significance: "Traditional Saturday night feast in Barbados." }
+                ],
+                "Belize": [
+                    { type: "Breakfast", local: "Fry Jacks", english: "Fried Dough", ingredients: "Flour, baking powder, salt, milk, oil", significance: "Crispy, puffy breakfast staple often served with beans or cheese." },
+                    { type: "Lunch", local: "Stew Chicken with Rice and Beans", english: "Stewed Chicken with Rice and Beans", ingredients: "Chicken, rice, beans, coconut milk, spices", significance: "Belize's national dish, a savory comfort food." },
+                    { type: "Dinner", local: "Tamales", english: "Corn Masa with Meat and Sauce", ingredients: "Masa dough, chicken or pork, achiote paste, peppers", significance: "Classic Mayan and Mexican-influenced dish, often for celebrations." }
+                ],
+                "Costa Rica": [
+                    { type: "Breakfast", local: "Gallo Pinto", english: "Mixed Rice and Beans", ingredients: "Rice, black beans, onions, peppers, cilantro", significance: "National dish and a cornerstone of Costa Rican breakfast culture." },
+                    { type: "Lunch", local: "Casado", english: "Mixed Plate", ingredients: "Rice, beans, plantains, salad, grilled meat/fish", significance: "Traditional lunch plate, meaning 'married' in reference to the combined foods." },
+                    { type: "Dinner", local: "Olla de Carne", english: "Meat and Vegetable Soup", ingredients: "Beef, corn on the cob, potatoes, cassava, taro", significance: "A hearty, nutritious soup popular for family dinners." }
+                ],
+                "Cuba": [
+                    { type: "Breakfast", local: "Tostada with Café con Leche", english: "Buttered Toast with Coffee", ingredients: "Cuban bread, butter, sugar, coffee, milk", significance: "Simple and essential Cuban breakfast." },
+                    { type: "Lunch", local: "Ropa Vieja", english: "Shredded Beef Stew", ingredients: "Shredded beef, bell peppers, onions, tomatoes, garlic", significance: "One of Cuba's national dishes, meaning 'old clothes'." },
+                    { type: "Dinner", local: "Congrí", english: "Rice and Red Beans", ingredients: "Rice, red beans, ham, pork, onion, garlic", significance: "A classic Cuban dinner side dish." }
+                ],
+                "Dominican Republic": [
+                    { type: "Breakfast", local: "Mangu", english: "Mashed Plantains", ingredients: "Green plantains, butter, onions, salami or fried cheese", significance: "Popular breakfast dish in the Dominican Republic." },
+                    { type: "Lunch", local: "La Bandera", english: "The Flag", ingredients: "White rice, red beans, stewed meat (chicken/beef), salad", significance: "The national dish, representing the colors of the flag." },
+                    { type: "Dinner", local: "Sancocho", english: "Seven-Meat Stew", ingredients: "Multiple meats, various tubers, corn on the cob", significance: "A hearty stew reserved for special occasions and family gatherings." }
+                ],
+                "El Salvador": [
+                    { type: "Breakfast", local: "Pupusas", english: "Stuffed Corn Tortillas", ingredients: "Corn masa, cheese, chicharrón, refried beans, cabbage slaw", significance: "National dish, a street food and staple meal." },
+                    { type: "Lunch", local: "Sopa de Pescado", english: "Fish Soup", ingredients: "Fish, vegetables (potatoes, cassava), herbs", significance: "Coastal specialty, a flavorful and light lunch." },
+                    { type: "Dinner", local: "Yuca Frita", english: "Fried Cassava", ingredients: "Cassava, chicharrón, cabbage slaw, tomato salsa", significance: "A popular street-food dinner." }
+                ],
+                "Guatemala": [
+                    { type: "Breakfast", local: "Desayuno Chapín", english: "Typical Guatemalan Breakfast", ingredients: "Eggs, black beans, fried plantains, cheese, tortillas", significance: "A classic, hearty breakfast plate." },
+                    { type: "Lunch", local: "Pepian", english: "Chicken and Vegetable Stew", ingredients: "Chicken, vegetables, peppers, pumpkin seeds, sesame seeds", significance: "A traditional dish with Mayan and Spanish influences." },
+                    { type: "Dinner", local: "Hilachas", english: "Shredded Beef Stew", ingredients: "Shredded beef, potatoes, carrots, tomato sauce", significance: "A common and flavorful dinner stew." }
+                ],
+                "Haiti": [
+                    { type: "Breakfast", local: "Bouillon", english: "Meat and Vegetable Soup", ingredients: "Beef or chicken, potatoes, carrots, plantains, herbs", significance: "A filling and nutritious breakfast/lunch soup." },
+                    { type: "Lunch", local: "Riz et Pois", english: "Rice and Beans", ingredients: "Rice, beans, tomato paste, onions, spices", significance: "A staple dish often served as the main part of a meal." },
+                    { type: "Dinner", local: "Griot", english: "Fried Pork", ingredients: "Pork, orange juice, garlic, onions, scotch bonnet pepper", significance: "A popular street food and celebratory dish." }
+                ],
+                "Honduras": [
+                    { type: "Breakfast", local: "Baleadas", english: "Stuffed Flour Tortilla", ingredients: "Flour tortilla, mashed fried beans, cheese, sour cream", significance: "The national dish and a staple for breakfast or a snack." },
+                    { type: "Lunch", local: "Sopa de Caracol", english: "Conch Soup", ingredients: "Conch, coconut milk, vegetables (yucca, plantain, sweet potato)", significance: "A coastal delicacy and popular lunch item." },
+                    { type: "Dinner", local: "Plato Típico", english: "Typical Plate", ingredients: "Grilled beef, refried beans, plantains, tortillas, avocado", significance: "A platter that showcases a variety of traditional flavors." }
+                ],
+                "Jamaica": [
+                    { type: "Breakfast", local: "Ackee and Saltfish", english: "Ackee and Salted Cod", ingredients: "Ackee fruit, salted cod, onions, peppers, tomatoes", significance: "Jamaica's national dish, a flavorful and popular breakfast." },
+                    { type: "Lunch", local: "Jerk Chicken", english: "Jerk-Marinated Chicken", ingredients: "Chicken, allspice, scotch bonnet peppers, thyme, garlic", significance: "An iconic Jamaican dish known for its spicy and aromatic marinade." },
+                    { type: "Dinner", local: "Curry Goat", english: "Curried Goat", ingredients: "Goat meat, curry powder, onions, garlic, thyme, potatoes", significance: "A flavorful and tender stew often served at gatherings." }
+                ],
+                "Nicaragua": [
+                    { type: "Breakfast", local: "Gallo Pinto", english: "Mixed Rice and Beans", ingredients: "Rice, red beans, onions, peppers", significance: "A staple breakfast dish, often served with tortillas and cheese." },
+                    { type: "Lunch", local: "Vigorón", english: "Pork Rind Salad", ingredients: "Pork rinds, boiled yucca, cabbage salad", significance: "A popular street food and lunch dish." },
+                    { type: "Dinner", local: "Indio Viejo", english: "Old Indian Stew", ingredients: "Shredded beef, corn tortilla, onion, garlic, tomatoes", significance: "A hearty and traditional dinner stew." }
+                ],
+                "Panama": [
+                    { type: "Breakfast", local: "Hojaldras", english: "Fried Dough", ingredients: "Flour, salt, baking powder, water", significance: "A light and fluffy breakfast food, often served with cheese or eggs." },
+                    { type: "Lunch", local: "Sancocho", english: "Chicken and Root Vegetable Soup", ingredients: "Chicken, yuca, ñame (yam), otoe (taro), corn, culantro", significance: "National soup of Panama, a beloved comfort food." },
+                    { type: "Dinner", local: "Arroz con Pollo", english: "Rice with Chicken", ingredients: "Rice, chicken, bell peppers, carrots, peas", significance: "A simple and popular one-pot dinner dish." }
+                ],
+                "Saint Kitts and Nevis": [
+                    { type: "Breakfast", local: "Goat Water", english: "Goat Stew", ingredients: "Goat meat, breadfruit, dumplings, vegetables", significance: "The national dish, a savory and rich stew." },
+                    { type: "Lunch", local: "Conch Fritters", english: "Fried Conch Balls", ingredients: "Conch, flour, egg, milk, bell peppers, onions", significance: "A crispy and flavorful coastal lunch snack." },
+                    { type: "Dinner", local: "Fresh Fish with Rice", english: "Grilled Fish with Rice and Vegetables", ingredients: "Local fish, rice, callaloo, plantains", significance: "A simple and healthy island dinner." }
+                ],
+                "Saint Lucia": [
+                    { type: "Breakfast", local: "Green Fig and Saltfish", english: "Boiled Green Bananas with Saltfish", ingredients: "Green bananas, salted fish, onions, peppers", significance: "Saint Lucia’s national breakfast pairing bananas and saltfish." },
+                    { type: "Lunch", local: "Bouyon", english: "Hearty Meat and Dumpling Soup", ingredients: "Beef/pork, dumplings, yam, vegetables", significance: "Popular one-pot midday meal." },
+                    { type: "Dinner", local: "Grilled Lobster", english: "Spiced Grilled Lobster", ingredients: "Lobster, garlic, butter, local spices", significance: "Island dinner often served for celebrations." }
+                ],
+                "Saint Vincent and the Grenadines": [
+                    { type: "Breakfast", local: "Ducana and Saltfish", english: "Sweet Potato Dumpling with Saltfish", ingredients: "Sweet potato, coconut, flour, saltfish", significance: "Traditional breakfast combining sweet and savory." },
+                    { type: "Lunch", local: "Callaloo Soup", english: "Leafy Green Stew", ingredients: "Callaloo leaves, coconut milk, crab or salted fish", significance: "Comforting lunchtime stew." },
+                    { type: "Dinner", local: "Roasted Breadfruit and Fried Jackfish", english: "Breadfruit with Fried Jackfish", ingredients: "Breadfruit, jackfish, spices, oil", significance: "Staple coastal dinner plate." }
+                ],
+                "Trinidad and Tobago": [
+                    { type: "Breakfast", local: "Doubles", english: "Curried Chickpeas in Flatbread", ingredients: "Baras (flatbread), curried chickpeas, chutney, pepper", significance: "Iconic street-food breakfast beloved across the islands." },
+                    { type: "Lunch", local: "Pelau", english: "One-Pot Rice with Meat and Peas", ingredients: "Rice, pigeon peas, chicken/beef, coconut milk, spices", significance: "National comfort food often eaten for lunch." },
+                    { type: "Dinner", local: "Callaloo with Crab", english: "Leafy Green Stew with Crab", ingredients: "Dasheen leaves (callaloo), crab, coconut milk, herbs", significance: "Classic Trinidadian dinner often served with rice or dumplings." }
+                ]
+            },
+            "South America": {
+                "Argentina": [
+                    { type: "Breakfast", local: "Medialunas with Coffee", english: "Croissants with Coffee", ingredients: "Flour, butter, sugar, coffee", significance: "Classic Argentine breakfast." },
+                    { type: "Lunch", local: "Milanesa with Salad", english: "Breaded Meat Cutlet", ingredients: "Beef/pork, breadcrumbs, salad", significance: "Common lunch dish." },
+                    { type: "Dinner", local: "Asado", english: "Grilled Meat Barbecue", ingredients: "Beef, sausages, chimichurri", significance: "Traditional Argentine dinner." }
+                ],
+                "Bolivia": [
+                    { type: "Breakfast", local: "Salteñas", english: "Stuffed Baked Pastries", ingredients: "Dough, beef/chicken, potato, spices", significance: "Popular breakfast pastry." },
+                    { type: "Lunch", local: "Silpancho", english: "Rice, Potato, Meat Plate", ingredients: "Rice, potatoes, beef, fried egg", significance: "Traditional lunch meal." },
+                    { type: "Dinner", local: "Fricase Paceño", english: "Spicy Pork Stew", ingredients: "Pork, potatoes, chuño, chili", significance: "Festive dinner dish." }
+                ],
+                "Brazil": [
+                    { type: "Breakfast", local: "Pão de Queijo", english: "Cheese Bread", ingredients: "Cassava flour, cheese, eggs", significance: "Iconic Brazilian breakfast." },
+                    { type: "Lunch", local: "Feijoada", english: "Black Bean Stew", ingredients: "Black beans, pork, sausage, rice", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Moqueca", english: "Fish Stew with Coconut", ingredients: "Fish, coconut milk, tomato, cilantro", significance: "Traditional coastal dinner." }
+                ],
+                "Chile": [
+                    { type: "Breakfast", local: "Marraqueta with Avocado", english: "Bread with Avocado", ingredients: "Bread roll, avocado, tomato", significance: "Popular Chilean breakfast." },
+                    { type: "Lunch", local: "Pastel de Choclo", english: "Corn Pie", ingredients: "Corn, beef, chicken, olives, egg", significance: "Traditional lunch dish." },
+                    { type: "Dinner", local: "Cazuela", english: "Meat and Vegetable Soup", ingredients: "Beef/chicken, potato, pumpkin, corn", significance: "Typical Chilean dinner." }
+                ],
+                "Colombia": [
+                    { type: "Breakfast", local: "Arepa with Cheese", english: "Corn Cake with Cheese", ingredients: "Cornmeal, cheese, butter", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Bandeja Paisa", english: "Countryman's Platter", ingredients: "Beans, rice, ground meat, chicharrón, fried egg, plantain", significance: "National lunch platter." },
+                    { type: "Dinner", local: "Ajiaco", english: "Chicken and Potato Soup", ingredients: "Chicken, three types of potatoes, corn, guascas herbs", significance: "A hearty soup especially popular in Bogotá." }
+                ],
+                "Ecuador": [
+                    { type: "Breakfast", local: "Bolón de Verde", english: "Green Plantain Ball", ingredients: "Green plantain, cheese or chicharrón", significance: "Traditional breakfast ball." },
+                    { type: "Lunch", local: "Fritada", english: "Fried Pork", ingredients: "Pork, onion, garlic, cumin, corn, plantain", significance: "Pork dish served for special occasions and lunch." },
+                    { type: "Dinner", local: "Llapingachos", english: "Potato Cakes", ingredients: "Potato, cheese, annatto, peanut sauce", significance: "Potato dish from the central highlands." }
+                ],
+                "Guyana": [
+                    { type: "Breakfast", local: "Saltfish with Bakes", english: "Salted Fish with Fried Bread", ingredients: "Saltfish, onions, peppers, bakes (fried flour dough)", significance: "Common breakfast dish with West Indian influences." },
+                    { type: "Lunch", local: "Cook-up Rice", english: "One-Pot Rice Dish", ingredients: "Rice, beans/peas, coconut milk, meats, vegetables", significance: "A flavorful, one-pot dish common on Saturdays." },
+                    { type: "Dinner", local: "Pepperpot", english: "Cassareep Stew", ingredients: "Beef, cassareep (cassava root sauce), cinnamon, cloves", significance: "National dish of Guyana, with Indigenous origins." }
+                ],
+                "Paraguay": [
+                    { type: "Breakfast", local: "Chipa", english: "Cheese Bread", ingredients: "Cassava starch, cheese, eggs, milk", significance: "Gluten-free cheese bread, a breakfast staple." },
+                    { type: "Lunch", local: "Sopa Paraguaya", english: "Cornbread", ingredients: "Cornmeal, cheese, onion, milk", significance: "National lunch side dish." },
+                    { type: "Dinner", local: "Mbeju", english: "Starchy Cheese Pancake", ingredients: "Cassava starch, cheese, butter", significance: "Traditional dinner food." }
+                ],
+                "Peru": [
+                    { type: "Breakfast", local: "Pan con Chicharrón", english: "Pork Sandwich", ingredients: "Pork belly, bread, sweet potato, onion salsa", significance: "Classic Peruvian breakfast." },
+                    { type: "Lunch", local: "Lomo Saltado", english: "Stir-Fried Beef", ingredients: "Beef, onion, tomato, fries, rice", significance: "Iconic lunch dish." },
+                    { type: "Dinner", local: "Ceviche", english: "Raw Fish Marinated in Citrus", ingredients: "Fish, lime, chili, onion, cilantro", significance: "National dinner dish." }
+                ],
+                "Suriname": [
+                    { type: "Breakfast", local: "Bread with Peanut Butter", english: "Bread with Peanut Paste", ingredients: "Bread, peanut butter, coffee", significance: "Common breakfast." },
+                    { type: "Lunch", local: "Moksi Alesi", english: "Mixed Rice Dish", ingredients: "Rice, beans, salted meat, vegetables", significance: "Creole-style lunch." },
+                    { type: "Dinner", local: "Pom", english: "Oven-Baked Root Dish", ingredients: "Tayer root, chicken, citrus juice", significance: "Festive dinner meal." }
+                ],
+                "Uruguay": [
+                    { type: "Breakfast", local: "Bizcochos with Coffee", english: "Pastries with Coffee", ingredients: "Flour, butter, sugar, coffee", significance: "Traditional breakfast." },
+                    { type: "Lunch", local: "Chivito", english: "Steak Sandwich", ingredients: "Beef steak, ham, cheese, lettuce, tomato", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Parrillada", english: "Grilled Meats", ingredients: "Beef, sausages, sweetbreads, chimichurri", significance: "Common dinner tradition." }
+                ],
+                "Venezuela": [
+                    { type: "Breakfast", local: "Arepa Rellena", english: "Stuffed Corn Cake", ingredients: "Cornmeal, cheese, beans, meat", significance: "National breakfast dish." },
+                    { type: "Lunch", local: "Pabellón Criollo", english: "Rice, Beans, Meat Plate", ingredients: "Rice, black beans, shredded beef, plantain", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Hallaca", english: "Corn Dough Tamale", ingredients: "Corn dough, beef/pork/chicken stew, raisins, olives", significance: "Traditional holiday dinner dish." }
+                ]
+            },
+            "Europe": {
+                "Albania": [
+                    { type: "Breakfast", local: "Byrek me Djathë", english: "Cheese Pie", ingredients: "Phyllo, feta, spinach, egg", significance: "Common breakfast pastry" },
+                    { type: "Lunch", local: "Tavë Kosi", english: "Baked Lamb with Yogurt", ingredients: "Lamb, yogurt, egg, rice", significance: "National lunch dish" },
+                    { type: "Dinner", local: "Peshk në Zgarë", english: "Grilled Fish", ingredients: "Fresh fish, olive oil, lemon", significance: "Coastal dinner tradition" }
+                ],
+                "Andorra": [
+                    { type: "Breakfast", local: "Trinxat", english: "Cabbage & Potato Cake", ingredients: "Cabbage, potatoes, bacon", significance: "Mountain breakfast staple" },
+                    { type: "Lunch", local: "Escudella", english: "Meat & Vegetable Stew", ingredients: "Meat, sausage, chickpeas, cabbage", significance: "Traditional lunch" },
+                    { type: "Dinner", local: "Truita de Riu", english: "River Trout", ingredients: "Trout, olive oil, garlic", significance: "Common Pyrenean dinner" }
+                ],
+                "Armenia": [
+                    { type: "Breakfast", local: "Lavash with Cheese", english: "Flatbread with Cheese", ingredients: "Lavash, cheese, herbs", significance: "Simple breakfast" },
+                    { type: "Lunch", local: "Khash", english: "Beef Soup", ingredients: "Beef bones, garlic, bread", significance: "Traditional winter lunch" },
+                    { type: "Dinner", local: "Khorovats", english: "Armenian Barbecue", ingredients: "Grilled meat, vegetables, herbs", significance: "Popular dinner for gatherings" }
+                ],
+                "Austria": [
+                    { type: "Breakfast", local: "Kaisersemmel with Butter", english: "Roll with Butter", ingredients: "Bread roll, butter, jam", significance: "Typical Austrian breakfast" },
+                    { type: "Lunch", local: "Wiener Schnitzel", english: "Breaded Veal Cutlet", ingredients: "Veal, breadcrumbs, lemon", significance: "Iconic lunch dish" },
+                    { type: "Dinner", local: "Tafelspitz", english: "Boiled Beef", ingredients: "Beef, root vegetables, broth", significance: "Classic Viennese dinner" }
+                ],
+                "Belarus": [
+                    { type: "Breakfast", local: "Draniki", english: "Potato Pancakes", ingredients: "Potatoes, onion, egg, sour cream", significance: "Staple breakfast" },
+                    { type: "Lunch", local: "Machanka", english: "Pork Stew", ingredients: "Pork, onions, sour cream", significance: "Traditional lunch" },
+                    { type: "Dinner", local: "Vereshchaka", english: "Pork Sausage with Buckwheat", ingredients: "Sausage, buckwheat groats, broth", significance: "Traditional dinner" }
+                ],
+                "Belgium": [
+                    { type: "Breakfast", local: "Pain au chocolat", english: "Chocolate Croissant", ingredients: "Flour, butter, chocolate", significance: "Classic breakfast pastry" },
+                    { type: "Lunch", local: "Moules-frites", english: "Mussels with Fries", ingredients: "Mussels, white wine, onion, celery", significance: "National lunch dish" },
+                    { type: "Dinner", local: "Stoemp", english: "Mashed Potatoes with Vegetables", ingredients: "Potatoes, carrots, cabbage, leeks", significance: "Hearty dinner dish" }
+                ],
+                "Bosnia and Herzegovina": [
+                    { type: "Breakfast", local: "Ćevapi", english: "Grilled Minced Meat", ingredients: "Minced beef, garlic, onion", significance: "National dish, popular for breakfast/lunch" },
+                    { type: "Lunch", local: "Bosanski Lonac", english: "Bosnian Pot", ingredients: "Beef, lamb, potatoes, cabbage, carrots", significance: "Traditional lunch stew" },
+                    { type: "Dinner", local: "Burek", english: "Filo Pastry with Meat", ingredients: "Filo dough, minced meat, onion", significance: "Popular dinner snack" }
+                ],
+                "Bulgaria": [
+                    { type: "Breakfast", local: "Banitsa", english: "Cheese Pastry", ingredients: "Phyllo dough, sirene cheese, yogurt, eggs", significance: "National breakfast pastry" },
+                    { type: "Lunch", local: "Shopska Salata", english: "Shop's Salad", ingredients: "Tomatoes, cucumbers, peppers, onions, sirene cheese", significance: "Popular lunch salad" },
+                    { type: "Dinner", local: "Moussaka", english: "Layered Potato and Meat Bake", ingredients: "Potatoes, minced meat, onions, spices", significance: "Classic dinner dish" }
+                ],
+                "Croatia": [
+                    { type: "Breakfast", local: "Palačinke", english: "Pancakes", ingredients: "Flour, eggs, milk, sugar", significance: "Sweet breakfast" },
+                    { type: "Lunch", local: "Pašticada", english: "Beef Stew", ingredients: "Beef, red wine, prunes, dried figs, vegetables", significance: "Dalmatian lunch specialty" },
+                    { type: "Dinner", local: "Mješano Meso", english: "Mixed Grill", ingredients: "Grilled pork, chicken, cevapi, sausages", significance: "Popular dinner plate" }
+                ],
+                "Cyprus": [
+                    { type: "Breakfast", local: "Halloumi with Bread", english: "Halloumi Cheese with Bread", ingredients: "Halloumi cheese, bread, tomatoes, cucumber", significance: "Traditional breakfast" },
+                    { type: "Lunch", local: "Souvlaki", english: "Grilled Meat Skewers", ingredients: "Pork/chicken, pita bread, salad, tzatziki", significance: "Popular lunch snack" },
+                    { type: "Dinner", local: "Kleftiko", english: "Baked Lamb", ingredients: "Lamb, potatoes, lemon, garlic, herbs", significance: "Traditional dinner dish" }
+                ],
+                "Czech Republic": [
+                    { type: "Breakfast", local: "Chlebíčky", english: "Open-Faced Sandwiches", ingredients: "Bread, various spreads, ham, cheese, egg, vegetables", significance: "Popular breakfast/snack" },
+                    { type: "Lunch", local: "Svíčková na Smetaně", english: "Marinated Beef with Cream Sauce", ingredients: "Beef loin, root vegetables, heavy cream, dumplings", significance: "National dish, typically a Sunday lunch" },
+                    { type: "Dinner", local: "Trdelník", english: "Spit Cake", ingredients: "Dough, sugar, cinnamon, nuts", significance: "Sweet street-food dessert" }
+                ],
+                "Denmark": [
+                    { type: "Breakfast", local: "Smørrebrød", english: "Open-Faced Sandwich", ingredients: "Rye bread, various toppings (fish, meat, vegetables)", significance: "Iconic lunch dish, popular for breakfast too" },
+                    { type: "Lunch", local: "Frikadeller", english: "Danish Meatballs", ingredients: "Minced pork/veal, onions, spices", significance: "Traditional lunch food" },
+                    { type: "Dinner", local: "Stegt Flæsk", english: "Crispy Pork", ingredients: "Pork belly, potatoes, parsley sauce", significance: "National dinner dish" }
+                ],
+                "Estonia": [
+                    { type: "Breakfast", local: "Puder", english: "Porridge", ingredients: "Oats, water, salt, jam or berries", significance: "Simple and warm breakfast" },
+                    { type: "Lunch", local: "Kiluvõileib", english: "Sprat Sandwich", ingredients: "Black rye bread, sprat fish, egg, onion", significance: "Classic lunch snack" },
+                    { type: "Dinner", local: "Verivorst", english: "Blood Sausage", ingredients: "Blood sausage, barley, spices, lingonberry jam", significance: "Traditional winter dinner" }
+                ],
+                "Finland": [
+                    { type: "Breakfast", local: "Puuro", english: "Porridge", ingredients: "Oats, water, milk, berries", significance: "Staple breakfast" },
+                    { type: "Lunch", local: "Lohikeitto", english: "Salmon Soup", ingredients: "Salmon, potatoes, carrots, leeks, dill", significance: "Hearty coastal lunch" },
+                    { type: "Dinner", local: "Karjalanpaisti", english: "Karelian Hot Pot", ingredients: "Beef, pork, lamb, root vegetables", significance: "Traditional slow-cooked dinner stew" }
+                ],
+                "France": [
+                    { type: "Breakfast", local: "Croissant", english: "Croissant", ingredients: "Flour, butter, yeast", significance: "Iconic breakfast pastry" },
+                    { type: "Lunch", local: "Quiche Lorraine", english: "Savory Tart", ingredients: "Shortcrust pastry, bacon, cheese, cream, eggs", significance: "Classic lunch dish" },
+                    { type: "Dinner", local: "Coq au Vin", english: "Chicken in Wine", ingredients: "Chicken, red wine, mushrooms, onions, bacon", significance: "Traditional dinner stew" }
+                ],
+                "Germany": [
+                    { type: "Breakfast", local: "Brot und Brötchen", english: "Bread and Rolls", ingredients: "Various breads, cheese, cold cuts, jam", significance: "Hearty and diverse breakfast" },
+                    { type: "Lunch", local: "Spätzle mit Käse", english: "German Mac and Cheese", ingredients: "Spätzle pasta, cheese, fried onions", significance: "Comfort food for lunch" },
+                    { type: "Dinner", local: "Sauerbraten", english: "Marinated Roast", ingredients: "Beef, vinegar, spices, root vegetables", significance: "Traditional dinner roast" }
+                ],
+                "Greece": [
+                    { type: "Breakfast", local: "Yogurt with Honey", english: "Greek Yogurt with Honey", ingredients: "Greek yogurt, honey, nuts", significance: "Healthy and simple breakfast" },
+                    { type: "Lunch", local: "Moussaka", english: "Layered Eggplant and Meat Bake", ingredients: "Eggplant, minced meat, tomato sauce, béchamel", significance: "Classic lunch dish" },
+                    { type: "Dinner", local: "Souvlaki", english: "Grilled Meat Skewers", ingredients: "Pork/chicken, pita bread, tomato, onion, tzatziki", significance: "Popular street food and dinner" }
+                ],
+                "Hungary": [
+                    { type: "Breakfast", local: "Lángos", english: "Fried Dough", ingredients: "Flour, yeast, potatoes, toppings (sour cream, cheese)", significance: "Street food, popular for breakfast" },
+                    { type: "Lunch", local: "Goulash", english: "Meat and Vegetable Soup", ingredients: "Beef, onions, carrots, paprika, potatoes", significance: "National lunch soup" },
+                    { type: "Dinner", local: "Töltött Káposzta", english: "Stuffed Cabbage", ingredients: "Cabbage leaves, minced meat, rice, paprika, sour cream", significance: "Traditional dinner dish" }
+                ],
+                "Iceland": [
+                    { type: "Breakfast", local: "Hafragrautur", english: "Oatmeal", ingredients: "Oats, water, milk, brown sugar, raisins", significance: "Common breakfast" },
+                    { type: "Lunch", local: "Kjötsúpa", english: "Meat Soup", ingredients: "Lamb, root vegetables, herbs", significance: "Traditional warming lunch" },
+                    { type: "Dinner", local: "Hákarl", english: "Fermented Shark", ingredients: "Fermented shark meat", significance: "Traditional food, often for celebrations" }
+                ],
+                "Ireland": [
+                    { type: "Breakfast", local: "Full Irish Breakfast", english: "Full Irish Breakfast", ingredients: "Sausages, bacon, black pudding, white pudding, eggs, tomatoes, mushrooms", significance: "Hearty and popular breakfast" },
+                    { type: "Lunch", local: "Shepherd's Pie", english: "Shepherd's Pie", ingredients: "Minced lamb, vegetables, mashed potato topping", significance: "Classic lunch dish" },
+                    { type: "Dinner", local: "Irish Stew", english: "Irish Stew", ingredients: "Lamb, potatoes, onions, carrots", significance: "Traditional dinner stew" }
+                ],
+                "Italy": [
+                    { type: "Breakfast", local: "Cornetto e Caffè", english: "Croissant and Coffee", ingredients: "Croissant, espresso", significance: "Classic Italian breakfast" },
+                    { type: "Lunch", local: "Pasta Carbonara", english: "Pasta with Creamy Sauce", ingredients: "Pasta, guanciale (cured pork), eggs, pecorino cheese", significance: "Roman lunch classic" },
+                    { type: "Dinner", local: "Lasagna", english: "Layered Pasta Bake", ingredients: "Pasta sheets, meat sauce, béchamel, cheese", significance: "Iconic dinner dish" }
+                ],
+                "Kosovo": [
+                    { type: "Breakfast", local: "Flija", english: "Layered Pancake Pie", ingredients: "Flour, water, eggs, yogurt, cream", significance: "Traditional breakfast dish" },
+                    { type: "Lunch", local: "Pasul", english: "Bean Soup", ingredients: "White beans, dried meat, onion, carrots", significance: "Hearty lunch soup" },
+                    { type: "Dinner", local: "Tavë Kosi", english: "Baked Lamb with Yogurt", ingredients: "Lamb, yogurt, egg, rice", significance: "National dinner dish" }
+                ],
+                "Latvia": [
+                    { type: "Breakfast", local: "Pankūkas", english: "Pancakes", ingredients: "Flour, milk, eggs", significance: "Sweet breakfast" },
+                    { type: "Lunch", local: "Pelmeņi", english: "Dumplings", ingredients: "Dough, minced meat", significance: "Popular lunch food" },
+                    { type: "Dinner", local: "Kartupeļu Pankūkas", english: "Potato Pancakes", ingredients: "Grated potatoes, onion, egg", significance: "Savory dinner dish" }
+                ],
+                "Liechtenstein": [
+                    { type: "Breakfast", local: "Käsknöpfle", english: "Cheese Pasta", ingredients: "Flour, eggs, cheese", significance: "National dish, popular for breakfast/lunch" },
+                    { type: "Lunch", local: "Ribel", english: "Cornmeal Porridge", ingredients: "Cornmeal, milk, water", significance: "Traditional lunch" },
+                    { type: "Dinner", local: "Rösti", english: "Potato Cake", ingredients: "Potatoes, butter", significance: "Common dinner side" }
+                ],
+                "Lithuania": [
+                    { type: "Breakfast", local: "Varškėčiai", english: "Cottage Cheese Pancakes", ingredients: "Cottage cheese, eggs, flour, sugar", significance: "Sweet breakfast" },
+                    { type: "Lunch", local: "Cepelinai", english: "Potato Dumplings", ingredients: "Grated potatoes, minced meat/cheese", significance: "National lunch dish" },
+                    { type: "Dinner", local: "Bulviniai Blynai", english: "Potato Pancakes", ingredients: "Potatoes, onion, eggs", significance: "Savory dinner food" }
+                ],
+                "Luxembourg": [
+                    { type: "Breakfast", local: "Judd mat Gaardebounen", english: "Smoked Pork Collar with Beans", ingredients: "Smoked pork, broad beans, potatoes", significance: "National dish, often eaten for lunch/dinner" },
+                    { type: "Lunch", local: "Bouneschlupp", english: "Green Bean Soup", ingredients: "Green beans, potatoes, bacon", significance: "Hearty lunch soup" },
+                    { type: "Dinner", local: "F'rell am Rëschteck", english: "Trout in a Foil", ingredients: "Trout, herbs, spices", significance: "Common river fish dinner" }
+                ],
+                "Malta": [
+                    { type: "Breakfast", local: "Pastizzi", english: "Filo Pastry with Ricotta/Peas", ingredients: "Filo dough, ricotta cheese or pea mixture", significance: "Classic breakfast pastry" },
+                    { type: "Lunch", local: "Stuffat tal-fenek", english: "Rabbit Stew", ingredients: "Rabbit, wine, vegetables", significance: "National lunch dish" },
+                    { type: "Dinner", local: "Lampuki Pie", english: "Dolphin Fish Pie", ingredients: "Lampuki fish, puff pastry, spinach, cauliflower", significance: "Coastal dinner dish" }
+                ],
+                "Moldova": [
+                    { type: "Breakfast", local: "Mamaliga", english: "Corn Porridge", ingredients: "Cornmeal, water, salt", significance: "Staple breakfast" },
+                    { type: "Lunch", local: "Zeamă", english: "Chicken Noodle Soup", ingredients: "Chicken, noodles, vegetables", significance: "Traditional lunch soup" },
+                    { type: "Dinner", local: "Sarmale", english: "Stuffed Cabbage Rolls", ingredients: "Cabbage leaves, minced meat, rice", significance: "Popular dinner dish" }
+                ],
+                "Monaco": [
+                    { type: "Breakfast", local: "Fougasse Monegasque", english: "Monégasque Flatbread", ingredients: "Bread dough, almonds, raisins", significance: "Traditional breakfast" },
+                    { type: "Lunch", local: "Barbagiuan", english: "Stuffed Fritters", ingredients: "Dough, Swiss chard, cheese, rice", significance: "Popular lunch snack" },
+                    { type: "Dinner", local: "Stocafi", english: "Cod Fish Stew", ingredients: "Dried cod, tomatoes, vegetables", significance: "Traditional dinner" }
+                ],
+                "Montenegro": [
+                    { type: "Breakfast", local: "Kačamak", english: "Cornmeal Porridge with Cheese", ingredients: "Cornmeal, potatoes, cheese, milk", significance: "Traditional breakfast" },
+                    { type: "Lunch", local: "Japraci", english: "Stuffed Grape Leaves", ingredients: "Grape leaves, minced meat, rice", significance: "Common lunch dish" },
+                    { type: "Dinner", local: "Riblja Čorba", english: "Fish Soup", ingredients: "Fish, vegetables, spices", significance: "Coastal dinner specialty" }
+                ],
+                "Netherlands": [
+                    { type: "Breakfast", local: "Pannenkoeken", english: "Dutch Pancakes", ingredients: "Flour, eggs, milk, toppings (sugar, syrup, fruit)", significance: "Sweet breakfast" },
+                    { type: "Lunch", local: "Broodje Haring", english: "Herring Sandwich", ingredients: "Herring, white bread, onions, pickles", significance: "Street food lunch snack" },
+                    { type: "Dinner", local: "Stamppot", english: "Mashed Potatoes with Vegetables", ingredients: "Potatoes, kale/sauerkraut, sausage", significance: "Traditional dinner dish" }
+                ],
+                "North Macedonia": [
+                    { type: "Breakfast", local: "Burek", english: "Meat Pie", ingredients: "Filo dough, minced meat, onion", significance: "Common breakfast pastry" },
+                    { type: "Lunch", local: "Tavče Gravče", english: "Baked Beans", ingredients: "Beans, onion, peppers, herbs", significance: "National lunch dish" },
+                    { type: "Dinner", local: "Kebapi", english: "Grilled Minced Meat", ingredients: "Minced meat, garlic, spices", significance: "Popular dinner food" }
+                ],
+                "Norway": [
+                    { type: "Breakfast", local: "Havregrøt", english: "Oatmeal", ingredients: "Oats, water, milk", significance: "Simple and warm breakfast" },
+                    { type: "Lunch", local: "Fårikål", english: "Mutton and Cabbage Stew", ingredients: "Mutton, cabbage, peppercorns", significance: "National dinner dish, often eaten for lunch" },
+                    { type: "Dinner", local: "Lutefisk", english: "Lye-Treated Fish", ingredients: "Dried whitefish, lye", significance: "Traditional dinner dish" }
+                ],
+                "Poland": [
+                    { type: "Breakfast", local: "Kanapka z Serem", english: "Cheese Sandwich", ingredients: "Bread, cheese, tomato, cucumber", significance: "Simple and popular breakfast" },
+                    { type: "Lunch", local: "Żurek", english: "Sour Rye Soup", ingredients: "Rye flour, white sausage, potatoes, egg", significance: "Classic lunch soup" },
+                    { type: "Dinner", local: "Pierogi", english: "Dumplings", ingredients: "Dough, various fillings (meat, cheese, potatoes, fruit)", significance: "National dinner food" }
+                ],
+                "Portugal": [
+                    { type: "Breakfast", local: "Pastel de Nata", english: "Custard Tart", ingredients: "Puff pastry, egg custard", significance: "Iconic breakfast pastry" },
+                    { type: "Lunch", local: "Francesinha", english: "Little Frenchie", ingredients: "Bread, cured meats, steak, cheese, beer sauce", significance: "Hearty lunch sandwich" },
+                    { type: "Dinner", local: "Bacalhau à Brás", english: "Cod with Eggs and Potatoes", ingredients: "Salt cod, potatoes, onions, eggs", significance: "Traditional codfish dinner" }
+                ],
+                "Romania": [
+                    { type: "Breakfast", local: "Mămăligă", english: "Corn Porridge", ingredients: "Cornmeal, cheese, sour cream", significance: "Traditional breakfast" },
+                    { type: "Lunch", local: "Ciorbă de Burtă", english: "Tripe Soup", ingredients: "Beef tripe, sour cream, garlic", significance: "Classic lunch soup" },
+                    { type: "Dinner", local: "Sarmale", english: "Stuffed Cabbage Rolls", ingredients: "Cabbage leaves, minced meat, rice, spices", significance: "National dinner dish" }
+                ],
+                "Russia": [
+                    { type: "Breakfast", local: "Blini", english: "Pancakes", ingredients: "Flour, eggs, milk, yeast", significance: "Traditional breakfast food" },
+                    { type: "Lunch", local: "Borscht", english: "Beet Soup", ingredients: "Beets, cabbage, potatoes, meat", significance: "National lunch soup" },
+                    { type: "Dinner", local: "Pelmeni", english: "Meat Dumplings", ingredients: "Dough, minced meat", significance: "Popular dinner food" }
+                ],
+                "Serbia": [
+                    { type: "Breakfast", local: "Proja", english: "Cornbread", ingredients: "Cornmeal, cheese, eggs, oil", significance: "Traditional breakfast" },
+                    { type: "Lunch", local: "Ćevapi", english: "Grilled Minced Meat", ingredients: "Minced meat, bread, onion", significance: "National lunch dish" },
+                    { type: "Dinner", local: "Sarma", english: "Stuffed Cabbage Rolls", ingredients: "Cabbage leaves, minced meat, rice", significance: "Traditional dinner" }
+                ],
+                "Slovakia": [
+                    { type: "Breakfast", local: "Bryndzové Halušky", english: "Potato Dumplings with Sheep Cheese", ingredients: "Potatoes, flour, bryndza cheese, bacon", significance: "National dish, often eaten for lunch/dinner" },
+                    { type: "Lunch", local: "Kapustnica", english: "Sauerkraut Soup", ingredients: "Sauerkraut, smoked meat, mushrooms, potatoes", significance: "Hearty lunch soup" },
+                    { type: "Dinner", local: "Sviečková", english: "Marinated Beef with Cream Sauce", ingredients: "Beef, root vegetables, sour cream, dumplings", significance: "Traditional dinner" }
+                ],
+                "Slovenia": [
+                    { type: "Breakfast", local: "Kranjska Klobasa", english: "Carniolan Sausage", ingredients: "Pork, bacon, garlic, spices", significance: "National dish, popular for breakfast/lunch" },
+                    { type: "Lunch", local: "Žganci", english: "Buckwheat Porridge", ingredients: "Buckwheat flour, water, salt", significance: "Traditional lunch food" },
+                    { type: "Dinner", local: "Ričet", english: "Barley and Bean Stew", ingredients: "Barley, beans, vegetables, smoked pork", significance: "Hearty dinner stew" }
+                ],
+                "Spain": [
+                    { type: "Breakfast", local: "Tostada con Tomate", english: "Toast with Tomato", ingredients: "Toasted bread, tomato puree, olive oil, salt", significance: "Common breakfast" },
+                    { type: "Lunch", local: "Paella", english: "Rice with Saffron and Seafood/Meat", ingredients: "Rice, saffron, seafood/meat, vegetables", significance: "Famous lunch dish" },
+                    { type: "Dinner", local: "Tortilla Española", english: "Spanish Omelette", ingredients: "Eggs, potatoes, onions", significance: "Dinner staple" }
+                ],
+                "Sweden": [
+                    { type: "Breakfast", local: "Filmjölk with Berries", english: "Fermented Milk with Berries", ingredients: "Filmjölk, berries, oats", significance: "Common breakfast" },
+                    { type: "Lunch", local: "Köttbullar", english: "Meatballs", ingredients: "Beef, pork, cream, potatoes", significance: "Classic lunch" },
+                    { type: "Dinner", local: "Gravad Lax", english: "Cured Salmon", ingredients: "Salmon, dill, mustard sauce", significance: "Traditional dinner" }
+                ],
+                "Switzerland": [
+                    { type: "Breakfast", local: "Birchermüesli", english: "Muesli", ingredients: "Oats, apple, yogurt, nuts", significance: "Famous breakfast" },
+                    { type: "Lunch", local: "Rösti with Cheese", english: "Potato Rösti", ingredients: "Potatoes, butter, cheese", significance: "Traditional lunch" },
+                    { type: "Dinner", local: "Fondue", english: "Cheese Fondue", ingredients: "Swiss cheese, bread, wine", significance: "Classic dinner" }
+                ],
+                "Ukraine": [
+                    { type: "Breakfast", local: "Syrnyky", english: "Cottage Cheese Pancakes", ingredients: "Farmer cheese, egg, flour, sugar", significance: "Popular breakfast" },
+                    { type: "Lunch", local: "Borscht", english: "Beet Soup", ingredients: "Beets, cabbage, beef, sour cream", significance: "National lunch" },
+                    { type: "Dinner", local: "Holubtsi", english: "Cabbage Rolls", ingredients: "Cabbage, rice, meat", significance: "Traditional dinner" }
+                ],
+                "United Kingdom": [
+                    { type: "Breakfast", local: "Porridge with Fruit", english: "Oat Porridge", ingredients: "Oats, milk, fruit, honey", significance: "Classic breakfast" },
+                    { type: "Lunch", local: "Ploughman's Lunch", english: "Cheese & Pickles", ingredients: "Bread, cheese, pickles, salad", significance: "Traditional lunch" },
+                    { type: "Dinner", local: "Fish Pie", english: "Fish and Mash Pie", ingredients: "Fish, potatoes, milk, herbs", significance: "Typical dinner" }
+                ],
+                "Holy See": [
+                    { type: "Breakfast", local: "Pane Fresco", english: "Fresh Bread", ingredients: "Bread, olive oil", significance: "Simple breakfast" },
+                    { type: "Lunch", local: "Pasta al Pomodoro", english: "Tomato Pasta", ingredients: "Pasta, tomatoes, olive oil", significance: "Common lunch" },
+                    { type: "Dinner", local: "Insalata Caprese", english: "Caprese Salad", ingredients: "Mozzarella, tomatoes, basil", significance: "Simple dinner" }
+                ]
+            },
+            "Africa": {
+                "Algeria": [
+                    { type: "Breakfast", local: "Mhadjeb", english: "Semolina Flatbread Pancake", ingredients: "Semolina dough, tomato, onion, spices, olive oil", significance: "Street-food breakfast/tea-time item common across Algeria and Maghreb." },
+                    { type: "Lunch", local: "Couscous (كسكس)", english: "Steamed Semolina with Stew", ingredients: "Couscous, lamb or chicken, vegetables (carrot, zucchini), chickpeas, ras el hanout", significance: "Staple North African dish often served on Fridays and celebrations." },
+                    { type: "Dinner", local: "Chakhchoukha (شخشوخة)", english: "Broken Flatbread with Stew", ingredients: "Thin flatbread torn, lamb stew, tomato, spices", significance: "Traditional hearty dish with regional variations, communal." }
+                ],
+                "Angola": [
+                    { type: "Breakfast", local: "Funge with Fish", english: "Cassava Porridge with Fish", ingredients: "Cassava flour, fish, palm oil", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Moamba de Galinha", english: "Chicken Stew", ingredients: "Chicken, palm oil, okra, garlic", significance: "National dish." },
+                    { type: "Dinner", local: "Calulu", english: "Fish and Vegetable Stew", ingredients: "Fish, sweet potato leaves, okra", significance: "Common dinner." }
+                ],
+                "Benin": [
+                    { type: "Breakfast", local: "Aklui with Akassa", english: "Cornmeal Porridge with Sauce", ingredients: "Cornmeal, tomato sauce", significance: "Typical breakfast." },
+                    { type: "Lunch", local: "Amiwo with Chicken", english: "Tomato Maize Paste", ingredients: "Cornmeal, tomato, chicken", significance: "Traditional lunch." },
+                    { type: "Dinner", local: "Pâte Rouge", english: "Corn Dough with Red Sauce", ingredients: "Cornmeal, tomatoes, palm oil", significance: "Dinner staple." }
+                ],
+                "Botswana": [
+                    { type: "Breakfast", local: "Bogobe with Sour Milk", english: "Porridge with Fermented Milk", ingredients: "Sorghum, sour milk", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Seswaa with Pap", english: "Shredded Beef with Maize Porridge", ingredients: "Beef, maize meal, salt", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Morogo with Pap", english: "Leafy Greens with Maize", ingredients: "Spinach-type greens, maize meal", significance: "Dinner classic." }
+                ],
+                "Burkina Faso": [
+                    { type: "Breakfast", local: "To with Sauce", english: "Stiff Porridge with Sauce", ingredients: "Millet/sorghum, okra/tomato sauce", significance: "Breakfast staple." },
+                    { type: "Lunch", local: "Riz Gras", english: "Rice with Sauce", ingredients: "Rice, tomato, meat, vegetables", significance: "Common lunch dish." },
+                    { type: "Dinner", local: "Poulet Bicyclette", english: "Grilled Chicken", ingredients: "Chicken, spices, onions", significance: "Popular dinner." }
+                ],
+                "Burundi": [
+                    { type: "Breakfast", local: "Ubugari", english: "Cassava Porridge", ingredients: "Cassava flour, water", significance: "Breakfast base food." },
+                    { type: "Lunch", local: "Isombe", english: "Cassava Leaf Stew", ingredients: "Cassava leaves, meat, onions", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Ugali with beans", english: "Cornmeal with Beans", ingredients: "Maize flour, beans", significance: "Simple and common dinner." }
+                ],
+                "Cameroon": [
+                    { type: "Breakfast", local: "Beignets with Beans", english: "Donuts with Beans", ingredients: "Flour, beans", significance: "Common breakfast." },
+                    { type: "Lunch", local: "Ndole", english: "Bitterleaf and Nut Stew", ingredients: "Bitterleaf, groundnuts, beef or shrimp", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Koki", english: "Black-Eyed Pea Pudding", ingredients: "Black-eyed peas, palm oil", significance: "Traditional dinner." }
+                ],
+                "Cape Verde": [
+                    { type: "Breakfast", local: "Cachupa Refogada", english: "Fried Cachupa", ingredients: "Corn, beans, spices, fried leftover from previous dinner", significance: "Reheated national dish for breakfast." },
+                    { type: "Lunch", local: "Cachupa Rica", english: "Rich Cachupa", ingredients: "Corn, beans, sweet potato, cassava, meat", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Guisado de Atum", english: "Tuna Stew", ingredients: "Tuna, potatoes, vegetables, tomatoes", significance: "Coastal dinner." }
+                ],
+                "Central African Republic": [
+                    { type: "Breakfast", local: "Manioc Porridge", english: "Cassava Porridge", ingredients: "Cassava flour, water", significance: "Simple breakfast." },
+                    { type: "Lunch", local: "Maboké", english: "Fish with Spices in Banana Leaves", ingredients: "Fish, spices, vegetables, banana leaves", significance: "Traditional lunch." },
+                    { type: "Dinner", local: "Kanda", english: "Meat and Okra Stew", ingredients: "Ground meat, okra, spices", significance: "Common dinner." }
+                ],
+                "Chad": [
+                    { type: "Breakfast", local: "Esh", english: "Sorghum Porridge", ingredients: "Sorghum flour, water", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Marqa", english: "Vegetable and Meat Stew", ingredients: "Beef/lamb, vegetables, tomato", significance: "Common lunch." },
+                    { type: "Dinner", local: "Daraba", english: "Okra and Meat Stew", ingredients: "Okra, meat, spices", significance: "Hearty dinner." }
+                ],
+                "Comoros": [
+                    { type: "Breakfast", local: "M'trabaa", english: "Coconut Cake", ingredients: "Coconut, flour, sugar", significance: "Sweet breakfast." },
+                    { type: "Lunch", local: "Mtsolola", english: "Green Banana Stew", ingredients: "Green bananas, fish/chicken, coconut milk", significance: "Traditional lunch." },
+                    { type: "Dinner", local: "Pilao", english: "Spiced Rice with Meat", ingredients: "Rice, meat, potatoes, spices", significance: "Common dinner." }
+                ],
+                "Congo, Democratic Republic of the": [
+                    { type: "Breakfast", local: "Mikate", english: "Fried Dough", ingredients: "Flour, yeast, sugar", significance: "Breakfast snack." },
+                    { type: "Lunch", local: "Moambe", english: "Chicken with Palm Oil Sauce", ingredients: "Chicken, palm oil, spices", significance: "National dish." },
+                    { type: "Dinner", local: "Saka Saka", english: "Cassava Leaf Stew", ingredients: "Cassava leaves, palm oil, spices", significance: "Staple dinner." }
+                ],
+                "Congo, Republic of the": [
+                    { type: "Breakfast", local: "Chikwangue", english: "Cassava Bread", ingredients: "Cassava, banana leaves", significance: "Staple breakfast bread." },
+                    { type: "Lunch", local: "Poulet Moambé", english: "Chicken in Palm Nut Sauce", ingredients: "Chicken, palm nuts, onions, garlic", significance: "National dish." },
+                    { type: "Dinner", local: "Liboke de poisson", english: "Fish steamed in banana leaves", ingredients: "Fish, vegetables, spices", significance: "Traditional dinner." }
+                ],
+                "Côte d'Ivoire": [
+                    { type: "Breakfast", local: "Attiéké", english: "Cassava Couscous", ingredients: "Cassava, spices", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Kedjenou", english: "Chicken and Vegetable Stew", ingredients: "Chicken, vegetables, spices", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Mafe", english: "Peanut Stew", ingredients: "Meat, peanuts, vegetables", significance: "Common dinner." }
+                ],
+                "Djibouti": [
+                    { type: "Breakfast", local: "Laxoox", english: "Spongey Flatbread", ingredients: "Sorghum flour, water, yeast", significance: "Traditional breakfast bread." },
+                    { type: "Lunch", local: "Skoudehkaris", english: "Rice with Lamb", ingredients: "Rice, lamb, vegetables", significance: "Common lunch dish." },
+                    { type: "Dinner", local: "Fah-fah", english: "Meat Soup", ingredients: "Beef, vegetables, spices", significance: "Hearty dinner." }
+                ],
+                "Egypt": [
+                    { type: "Breakfast", local: "Ful Medames (فول مدمس)", english: "Fava Bean Stew", ingredients: "Fava beans, garlic, lemon, olive oil, spices", significance: "Egypt's national breakfast, a morning staple." },
+                    { type: "Lunch", local: "Koshari (كشري)", english: "Mixed Pasta Dish", ingredients: "Rice, macaroni, lentils, chickpeas, tomato sauce, fried onions", significance: "Hearty and iconic street food and lunch dish." },
+                    { type: "Dinner", local: "Grilled Kofta (كفتة) with Salad", english: "Grilled Meatballs with Salad", ingredients: "Ground meat (lamb/beef), spices, onion, grilled vegetables", significance: "A common family dinner for its simple preparation and flavor." }
+                ],
+                "Equatorial Guinea": [
+                    { type: "Breakfast", local: "Pescado a la Plancha", english: "Grilled Fish", ingredients: "Fish, lemon, garlic, spices", significance: "Coastal breakfast/lunch." },
+                    { type: "Lunch", local: "Sopa de Maíz", english: "Corn Soup", ingredients: "Corn, vegetables, meat", significance: "Common lunch." },
+                    { type: "Dinner", local: "Pollo a la Plancha", english: "Grilled Chicken", ingredients: "Chicken, herbs, spices", significance: "Simple and common dinner." }
+                ],
+                "Eritrea": [
+                    { type: "Breakfast", local: "Kicha Firfir", english: "Torn Flatbread with Spices", ingredients: "Flatbread, butter, spices", significance: "Traditional breakfast." },
+                    { type: "Lunch", local: "Zigni", english: "Beef Stew", ingredients: "Beef, onion, berbere spice mix", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Tsebhi Dorho", english: "Chicken Stew", ingredients: "Chicken, berbere spice mix", significance: "Common dinner." }
+                ],
+                "Eswatini": [
+                    { type: "Breakfast", local: "Sishwala", english: "Maize Porridge", ingredients: "Maize meal, water", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Incwancwa", english: "Sour Porridge", ingredients: "Sorghum, water", significance: "Lunch food." },
+                    { type: "Dinner", local: "Braised Chicken", english: "Chicken with Sauce", ingredients: "Chicken, onion, tomato", significance: "Dinner dish." }
+                ],
+                "Ethiopia": [
+                    { type: "Breakfast", local: "Chechebsa", english: "Torn Flatbread with Spices", ingredients: "Kitcha (flatbread), berbere, spices", significance: "Common breakfast." },
+                    { type: "Lunch", local: "Doro Wat", english: "Chicken Stew", ingredients: "Chicken, onions, berbere spice mix", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Tibs", english: "Sautéed Meat", ingredients: "Beef or lamb, onions, peppers", significance: "Dinner staple." }
+                ],
+                "Gabon": [
+                    { type: "Breakfast", local: "Bongo", english: "Snails with Okra", ingredients: "Snails, okra, spices", significance: "Traditional breakfast." },
+                    { type: "Lunch", local: "Nyembwe", english: "Palm Nut Sauce with Chicken", ingredients: "Chicken, palm nuts", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Poulet Moambe", english: "Chicken in Palm Nut Sauce", ingredients: "Chicken, palm nuts", significance: "Dinner staple." }
+                ],
+                "Gambia": [
+                    { type: "Breakfast", local: "Domoda", english: "Peanut Stew", ingredients: "Meat, peanut butter, tomatoes, onions", significance: "National dish, often eaten for lunch/dinner." },
+                    { type: "Lunch", local: "Benachin", english: "One-Pot Rice with Fish and Vegetables", ingredients: "Rice, fish, vegetables, tomato paste", significance: "Traditional lunch." },
+                    { type: "Dinner", local: "Yassa", english: "Chicken with Onion Sauce", ingredients: "Chicken, onions, lemon juice, mustard", significance: "Common dinner." }
+                ],
+                "Ghana": [
+                    { type: "Breakfast", local: "Waakye", english: "Rice and Beans", ingredients: "Rice, black-eyed peas, sorghum leaves", significance: "Breakfast staple." },
+                    { type: "Lunch", local: "Fufu with Soup", english: "Pounded Cassava with Soup", ingredients: "Cassava, plantains, various soups", significance: "Staple lunch." },
+                    { type: "Dinner", local: "Jollof Rice", english: "Jollof Rice", ingredients: "Rice, tomato, onions, spices", significance: "Popular dinner dish." }
+                ],
+                "Guinea": [
+                    { type: "Breakfast", local: "Poulet Yassa", english: "Chicken with Onion Sauce", ingredients: "Chicken, onions, lemon juice, mustard", significance: "National lunch dish, often eaten for breakfast." },
+                    { type: "Lunch", local: "Thieboudienne", english: "Rice with Fish and Vegetables", ingredients: "Rice, fish, carrots, cabbage, cassava", significance: "National dish of Senegal, popular in Guinea." },
+                    { type: "Dinner", local: "Mafé", english: "Peanut Stew", ingredients: "Meat, peanuts, vegetables", significance: "Common dinner." }
+                ],
+                "Guinea-Bissau": [
+                    { type: "Breakfast", local: "Jollof Rice", english: "Jollof Rice", ingredients: "Rice, tomatoes, onions, spices", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Chicken Yassa", english: "Chicken with Onion Sauce", ingredients: "Chicken, onions, lemon juice, mustard", significance: "Popular lunch dish." },
+                    { type: "Dinner", local: "Churrasco", english: "Grilled Meat", ingredients: "Grilled meat, rice, potatoes", significance: "Common dinner." }
+                ],
+                "Kenya": [
+                    { type: "Breakfast", local: "Ugali with Sukuma Wiki", english: "Cornmeal with Greens", ingredients: "Maize flour, collard greens", significance: "National dish, popular for any meal." },
+                    { type: "Lunch", local: "Nyama Choma", english: "Grilled Meat", ingredients: "Goat/beef, spices", significance: "Iconic lunch dish." },
+                    { type: "Dinner", local: "Mukimo", english: "Mashed Potatoes with Corn and Beans", ingredients: "Potatoes, maize, beans, greens", significance: "Traditional dinner dish." }
+                ],
+                "Lesotho": [
+                    { type: "Breakfast", local: "Papa", english: "Maize Porridge", ingredients: "Maize meal, water", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Makoenya", english: "Fried Dough", ingredients: "Flour, yeast, sugar", significance: "Lunch snack." },
+                    { type: "Dinner", local: "Moroho", english: "Wild Greens", ingredients: "Wild greens, meat", significance: "Common dinner." }
+                ],
+                "Liberia": [
+                    { type: "Breakfast", local: "Rice Bread", english: "Rice Bread", ingredients: "Rice flour, sugar, bananas", significance: "Sweet breakfast." },
+                    { type: "Lunch", local: "Jollof Rice", english: "Jollof Rice", ingredients: "Rice, tomato paste, onions, spices", significance: "Popular lunch dish." },
+                    { type: "Dinner", local: "Cassava Leaf Soup", english: "Cassava Leaf Soup", ingredients: "Cassava leaves, palm oil, meat", significance: "National dinner dish." }
+                ],
+                "Libya": [
+                    { type: "Breakfast", local: "Shakshouka (شكشوكة)", english: "Eggs in Tomato Sauce", ingredients: "Eggs, tomatoes, peppers, onions, spices", significance: "Common breakfast dish across the Maghreb." },
+                    { type: "Lunch", local: "Bazin (بازين)", english: "Barley Dough with Stew", ingredients: "Barley flour, lamb stew, potatoes, chickpeas, spices", significance: "Libya's national dish, a communal food." },
+                    { type: "Dinner", local: "Kusksi (كسكسي)", english: "Couscous with Stew", ingredients: "Couscous, chicken or lamb, vegetables, spices", significance: "Staple dinner dish on Fridays and special occasions." }
+                ],
+                "Madagascar": [
+                    { type: "Breakfast", local: "Vary Amin'anana", english: "Rice with Greens", ingredients: "Rice, leafy greens, meat", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Romazava", english: "Beef and Greens Stew", ingredients: "Beef, leafy greens", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Lasopy", english: "Vegetable Soup", ingredients: "Carrots, potatoes, beans, meat", significance: "Hearty dinner soup." }
+                ],
+                "Malawi": [
+                    { type: "Breakfast", local: "Nsima", english: "Maize Porridge", ingredients: "Maize meal, water", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Chambo", english: "Lake Malawi Tilapia", ingredients: "Tilapia, tomatoes, onions, spices", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Kachumbari", english: "Tomato and Onion Salad", ingredients: "Tomatoes, onions, chili, cilantro", significance: "Common dinner side." }
+                ],
+                "Mali": [
+                    { type: "Breakfast", local: "Tô", english: "Millet/Sorghum Porridge", ingredients: "Millet/Sorghum flour, water", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Tiga Dèguèna", english: "Peanut Stew", ingredients: "Meat, peanut butter, vegetables", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Foutou", english: "Pounded Yam with Sauce", ingredients: "Yam, various sauces", significance: "Common dinner." }
+                ],
+                "Mauritania": [
+                    { type: "Breakfast", local: "Thieboudienne", english: "Rice with Fish and Vegetables", ingredients: "Rice, fish, carrots, cabbage, cassava", significance: "National dish of Senegal, popular in Mauritania." },
+                    { type: "Lunch", local: "Couscous", english: "Couscous", ingredients: "Couscous, meat, vegetables", significance: "Common lunch." },
+                    { type: "Dinner", local: "Mafé", english: "Peanut Stew", ingredients: "Meat, peanuts, vegetables", significance: "Dinner staple." }
+                ],
+                "Mauritius": [
+                    { type: "Breakfast", local: "Dholl Puri", english: "Yellow Split Pea Flatbread", ingredients: "Yellow split peas, flour, turmeric, served with curry", significance: "Iconic street-food breakfast." },
+                    { type: "Lunch", local: "Gateaux Piment", english: "Chili Cakes", ingredients: "Split peas, chili, spices", significance: "Common lunch snack." },
+                    { type: "Dinner", local: "Rougaillle", english: "Tomato and Onion Stew", ingredients: "Tomatoes, onions, garlic, ginger, meat/fish", significance: "Classic dinner dish." }
+                ],
+                "Morocco": [
+                    { type: "Breakfast", local: "Mint Tea and Khobz (خبز)", english: "Mint Tea and Bread", ingredients: "Mint tea, Moroccan bread", significance: "Social and traditional breakfast staple." },
+                    { type: "Lunch", local: "Tagine (طاجين)", english: "Slow-Cooked Stew", ingredients: "Meat (lamb, chicken) or vegetables, spices, preserved lemon, olives", significance: "A famous Moroccan stew cooked in a conical pot (tagine) for lunch." },
+                    { type: "Dinner", local: "Couscous (كسكس)", english: "Steamed Semolina with Stew", ingredients: "Couscous, lamb or chicken, vegetables (carrot, zucchini), chickpeas, spices", significance: "Staple dish served on Fridays and for family dinners." }
+                ],
+                "Mozambique": [
+                    { type: "Breakfast", local: "Pão with Chicken", english: "Bread with Chicken", ingredients: "Bread roll, grilled chicken", significance: "Simple breakfast." },
+                    { type: "Lunch", local: "Matapa", english: "Cassava Leaf Stew", ingredients: "Cassava leaves, peanuts, coconut milk, shrimp/crab", significance: "Traditional coastal lunch dish." },
+                    { type: "Dinner", local: "Peri-peri Chicken", english: "Spicy Chicken", ingredients: "Chicken, peri-peri chili, garlic, spices", significance: "Popular dinner dish." }
+                ],
+                "Namibia": [
+                    { type: "Breakfast", local: "Oshifima", english: "Maize Porridge", ingredients: "Maize meal, water", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Kapana", english: "Grilled Meat", ingredients: "Grilled beef, spices", significance: "Popular street-food lunch." },
+                    { type: "Dinner", local: "Vetkoek", english: "Fried Dough", ingredients: "Flour, yeast, sugar", significance: "Dinner snack." }
+                ],
+                "Niger": [
+                    { type: "Breakfast", local: "Millet Porridge", english: "Millet Porridge", ingredients: "Millet flour, water", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Taguella", english: "Flatbread", ingredients: "Flour, water", significance: "Traditional lunch." },
+                    { type: "Dinner", local: "Jollof Rice", english: "Jollof Rice", ingredients: "Rice, tomatoes, onions, spices", significance: "Common dinner." }
+                ],
+                "Nigeria": [
+                    { type: "Breakfast", local: "Akara", english: "Fried Bean Fritters", ingredients: "Black-eyed peas, onions, peppers", significance: "Popular breakfast snack." },
+                    { type: "Lunch", local: "Jollof Rice", english: "Jollof Rice", ingredients: "Rice, tomato, onions, spices", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Suya", english: "Spicy Grilled Meat Skewers", ingredients: "Beef, skewers, peanut spice mix", significance: "Street-food dinner." }
+                ],
+                "Rwanda": [
+                    { type: "Breakfast", local: "Ubugari", english: "Cassava Porridge", ingredients: "Cassava flour, water", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Isombe", english: "Cassava Leaf Stew", ingredients: "Cassava leaves, meat, onions", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Ugali with Beans", english: "Cornmeal with Beans", ingredients: "Maize flour, beans", significance: "Common dinner." }
+                ],
+                "Senegal": [
+                    { type: "Breakfast", local: "Café Touba", english: "Spiced Coffee", ingredients: "Coffee, djar (Guinea pepper)", significance: "Traditional spiced coffee." },
+                    { type: "Lunch", local: "Thieboudienne", english: "Rice with Fish and Vegetables", ingredients: "Rice, fish, carrots, cabbage, cassava", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Yassa", english: "Chicken with Onion Sauce", ingredients: "Chicken, onions, lemon juice, mustard", significance: "Common dinner." }
+                ],
+                "Seychelles": [
+                    { type: "Breakfast", local: "Tuna Fish with Rice", english: "Tuna Fish with Rice", ingredients: "Tuna, rice, tomatoes, onions", significance: "Coastal breakfast." },
+                    { type: "Lunch", local: "Curry", english: "Various Curries", ingredients: "Meat/fish, coconut milk, curry powder", significance: "Common lunch." },
+                    { type: "Dinner", local: "Grilled Fish", english: "Grilled Fish", ingredients: "Fish, lemon, herbs", significance: "Simple coastal dinner." }
+                ],
+                "Sierra Leone": [
+                    { type: "Breakfast", local: "Cassava Leaves with Rice", english: "Cassava Leaves with Rice", ingredients: "Cassava leaves, palm oil, rice", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Groundnut Soup", english: "Peanut Stew", ingredients: "Meat, peanuts, vegetables", significance: "Common lunch." },
+                    { type: "Dinner", local: "Jollof Rice", english: "Jollof Rice", ingredients: "Rice, tomato, onions, spices", significance: "Popular dinner dish." }
+                ],
+                "Somalia": [
+                    { type: "Breakfast", local: "Canjeero", english: "Pancake", ingredients: "Flour, sugar, yeast", significance: "Traditional breakfast." },
+                    { type: "Lunch", local: "Bariis", english: "Rice with Spices", ingredients: "Rice, meat, spices", significance: "Common lunch." },
+                    { type: "Dinner", local: "Suqaar", english: "Diced Meat", ingredients: "Diced meat, spices, vegetables", significance: "Dinner staple." }
+                ],
+                "South Africa": [
+                    { type: "Breakfast", local: "Porridge", english: "Porridge", ingredients: "Maize meal, milk, sugar", significance: "Common breakfast." },
+                    { type: "Lunch", local: "Boerewors Roll", english: "Sausage Roll", ingredients: "Boerewors sausage, bread roll, relish", significance: "Popular lunch snack." },
+                    { type: "Dinner", local: "Braai", english: "Barbecue", ingredients: "Grilled meat, various salads", significance: "Traditional dinner." }
+                ],
+                "South Sudan": [
+                    { type: "Breakfast", local: "Asida", english: "Sorghum Porridge", ingredients: "Sorghum flour, water", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Ful Medames", english: "Fava Bean Stew", ingredients: "Fava beans, garlic, lemon, olive oil", significance: "Common lunch." },
+                    { type: "Dinner", local: "Kisra", english: "Fermented Sorghum Flatbread", ingredients: "Sorghum flour, water", significance: "Dinner staple." }
+                ],
+                "Sudan": [
+                    { type: "Breakfast", local: "Foul Medames", english: "Fava Bean Stew", ingredients: "Fava beans, onions, garlic, spices", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Tameya", english: "Falafel", ingredients: "Fava beans, spices", significance: "Common lunch." },
+                    { type: "Dinner", local: "Mulah", english: "Meat and Vegetable Stew", ingredients: "Meat, okra, tomatoes", significance: "Dinner staple." }
+                ],
+                "Tanzania": [
+                    { type: "Breakfast", local: "Uji", english: "Millet Porridge", ingredients: "Millet, sugar, milk", significance: "Breakfast food." },
+                    { type: "Lunch", local: "Ugali with Sukuma Wiki", english: "Maize with Greens", ingredients: "Maize, collard greens", significance: "Lunch staple." },
+                    { type: "Dinner", local: "Nyama Choma", english: "Grilled Meat", ingredients: "Goat/beef, spices", significance: "Dinner dish." }
+                ],
+                "Togo": [
+                    { type: "Breakfast", local: "Akume", english: "Maize Porridge", ingredients: "Maize, water", significance: "Breakfast food." },
+                    { type: "Lunch", local: "Gbome Sauce", english: "Spinach Sauce with Rice", ingredients: "Spinach, rice, spices", significance: "Lunch staple." },
+                    { type: "Dinner", local: "Fufu with Peanut Soup", english: "Pounded Yam with Soup", ingredients: "Yam, peanut soup", significance: "Dinner dish." }
+                ],
+                "Tunisia": [
+                    { type: "Breakfast", local: "Lablebi (لبلبي)", english: "Chickpea Soup", ingredients: "Chickpeas, bread, olive oil, garlic, cumin, harissa", significance: "A warm, spicy breakfast soup popular in winter." },
+                    { type: "Lunch", local: "Salade Mechouia (سلطة مشوية)", english: "Grilled Salad", ingredients: "Grilled peppers, tomatoes, onions, garlic, olive oil, tuna, boiled eggs", significance: "A refreshing lunch salad made from grilled vegetables." },
+                    { type: "Dinner", local: "Couscous (كسكس)", english: "Couscous with Lamb and Vegetables", ingredients: "Couscous, lamb, carrots, zucchini, potatoes, chickpeas, harissa", significance: "A staple and communal dinner dish, especially on Fridays." }
+                ],
+                "Uganda": [
+                    { type: "Breakfast", local: "Katogo", english: "Plantain Stew", ingredients: "Plantains, beans, meat", significance: "Breakfast dish." },
+                    { type: "Lunch", local: "Luwombo", english: "Stew in Banana Leaves", ingredients: "Chicken/beef, groundnuts, banana leaves", significance: "Lunch dish." },
+                    { type: "Dinner", local: "Posho with Beans", english: "Maize Porridge with Beans", ingredients: "Maize, beans, oil", significance: "Dinner staple." }
+                ],
+                "Zambia": [
+                    { type: "Breakfast", local: "Nshima with Tea", english: "Maize Porridge with Tea", ingredients: "Maize, sugar, tea", significance: "Breakfast food." },
+                    { type: "Lunch", local: "Chikanda", english: "Groundnut Sausage", ingredients: "Peanuts, wild tubers, chili", significance: "Lunch food." },
+                    { type: "Dinner", local: "Kapenta with Nshima", english: "Small Fish with Maize Porridge", ingredients: "Fish, maize, oil", significance: "Dinner dish." }
+                ],
+                "Zimbabwe": [
+                    { type: "Breakfast", local: "Maheu", english: "Fermented Maize Drink", ingredients: "Maize meal, water, sugar", significance: "Breakfast drink." },
+                    { type: "Lunch", local: "Sadza", english: "Maize Porridge with Stew", ingredients: "Maize meal, various stews (beef/greens)", significance: "National lunch staple." },
+                    { type: "Dinner", local: "Grilled Bream", english: "Grilled Bream Fish", ingredients: "Bream fish, spices", significance: "Common dinner dish." }
+                ]
+            },
+            "Asia": {
+                "Bangladesh": [
+                    { type: "Breakfast", local: "Panta Bhat", english: "Soaked Fermented Rice", ingredients: "Cooked rice, water (fermentation), salt, green chili, onion, fried salt fish (optional)", significance: "Traditional simple farmer breakfast eaten on hot days; associated with rustic cuisine and New Year celebrations." },
+                    { type: "Lunch", local: "Bhorta with Rice", english: "Mashed Vegetables/Fish with Rice", ingredients: "Mashed roasted eggplant or potato or fish, mustard oil, chili, onion, steamed rice", significance: "Comfort food; bhorta varieties showcase local ingredients and home cooking." },
+                    { type: "Dinner", local: "Ilish Bhapa", english: "Steamed Hilsa", ingredients: "Hilsa (ilish) fish, mustard paste, green chili, turmeric, banana leaf (for steaming)", significance: "Hilsa is Bangladesh's iconic fish; served on special occasions and festivals." }
+                ],
+                "Bhutan": [
+                    { type: "Breakfast", local: "Tsampa & Suja", english: "Roasted Barley with Butter Tea", ingredients: "Tsampa (roasted barley flour), hot water, butter tea (suja) made from tea, butter, salt", significance: "Tsampa is a staple grain; butter tea provides calories and warmth in high-altitude regions." },
+                    { type: "Lunch", local: "Ema Datshi", english: "Chili-and-Cheese Stew", ingredients: "Local chilies, yak or farmer's cheese, onions, tomatoes (often served with red rice)", significance: "Considered Bhutan’s national dish; reflects Bhutanese love of chilies and dairy." },
+                    { type: "Dinner", local: "Phaksha Paa", english: "Pork with Red/White Radish", ingredients: "Pork belly, radish, dry red chilies, garlic, ginger, soybean paste or salt", significance: "Popular festive/hearty dish often served at gatherings." }
+                ],
+                "Brunei": [
+                    { type: "Breakfast", local: "Nasi Katok", english: "Rice with Fried Chicken & Sambal", ingredients: "Steamed rice, fried chicken, chili sambal", significance: "Simple and beloved Bruneian street-food breakfast." },
+                    { type: "Lunch", local: "Ambuyat", english: "Sago Palm Starch Dish", ingredients: "Sago palm starch, water, served with sour fruit sauces and various fish/meat stews", significance: "Brunei’s national dish, eaten with chopsticks (candas)." },
+                    { type: "Dinner", local: "Laksa", english: "Spicy Noodle Soup", ingredients: "Rice noodles, shrimp, chicken, coconut milk, curry spices", significance: "Popular spicy noodle soup for dinner." }
+                ],
+                "Cambodia": [
+                    { type: "Breakfast", local: "Nom Banh Chok", english: "Khmer Noodles", ingredients: "Rice noodles, green fish curry (kroeung), herbs, vegetables", significance: "A popular breakfast noodle dish, often sold by street vendors." },
+                    { type: "Lunch", local: "Amok Trey", english: "Steamed Fish Curry", ingredients: "Fish fillet, coconut milk, kroeung (curry paste), nhor leaves, steamed in banana leaves", significance: "One of Cambodia’s most famous dishes, a subtle and aromatic curry." },
+                    { type: "Dinner", local: "Khmer Red Curry", english: "Khmer Red Curry", ingredients: "Meat (chicken/beef), coconut milk, kroeung, vegetables", significance: "Less spicy than Thai curries, often served at dinner parties." }
+                ],
+                "China": [
+                    { type: "Breakfast", local: "Jianbing", english: "Savory Crepe", ingredients: "Wheat/mung bean flour, egg, crispy wonton, scallions, cilantro, savory sauces", significance: "A popular street-food breakfast in Northern China, made fresh to order." },
+                    { type: "Lunch", local: "Kung Pao Chicken", english: "Spicy Stir-Fried Chicken", ingredients: "Chicken, peanuts, dried chili peppers, Sichuan peppercorns", significance: "A well-known Szechuan dish." },
+                    { type: "Dinner", local: "Mapo Tofu", english: "Spicy Tofu", ingredients: "Soft tofu, spicy sauce, minced beef/pork", significance: "A classic Szechuan dish with a spicy, numbing flavor profile." }
+                ],
+                "India": [
+                    { type: "Breakfast", local: "Masala Dosa", english: "Savory Crepe", ingredients: "Fermented rice and lentil batter, potato filling, served with sambar and chutney", significance: "South Indian breakfast staple; a light, crispy crepe with a flavorful filling." },
+                    { type: "Lunch", local: "Thali", english: "Platter of Curries and Sides", ingredients: "Assortment of curries (dal, vegetables), rice, bread (roti), yogurt, pickle", significance: "A balanced platter with small portions of various dishes, a common midday meal." },
+                    { type: "Dinner", local: "Butter Chicken", english: "Butter Chicken Curry", ingredients: "Chicken, tomato, butter, cream, spices", significance: "A popular North Indian dish." }
+                ],
+                "Indonesia": [
+                    { type: "Breakfast", local: "Bubur Ayam", english: "Chicken Rice Porridge", ingredients: "Rice porridge, shredded chicken, soybeans, crackers, scallions", significance: "A comforting and popular breakfast dish." },
+                    { type: "Lunch", local: "Nasi Goreng", english: "Fried Rice", ingredients: "Rice, chicken, vegetables, sweet soy sauce (kecap manis)", significance: "One of the most famous Indonesian dishes, served for lunch or dinner." },
+                    { type: "Dinner", local: "Sate Ayam", english: "Chicken Satay", ingredients: "Chicken skewers, peanut sauce", significance: "Grilled chicken skewers served with a rich peanut sauce." }
+                ],
+                "Japan": [
+                    { type: "Breakfast", local: "Tamagoyaki & Miso", english: "Rolled Omelette & Miso Soup", ingredients: "Tamagoyaki (eggs, dashi, soy sauce), miso soup (dashi, miso paste, tofu, seaweed)", significance: "A classic Japanese breakfast, savory and light." },
+                    { type: "Lunch", local: "Ramen", english: "Noodle Soup", ingredients: "Wheat noodles, broth (pork, soy, or miso base), sliced pork (chashu), egg, scallions", significance: "A popular lunch dish, originally from China but a Japanese staple." },
+                    { type: "Dinner", local: "Sushi", english: "Vinegared Rice and Fish", ingredients: "Vinegared rice, raw fish, vegetables, seaweed", significance: "A well-known Japanese dinner food." }
+                ],
+                "Malaysia": [
+                    { type: "Breakfast", local: "Nasi Lemak", english: "Coconut Rice", ingredients: "Rice cooked in coconut milk, sambal, anchovies, peanuts, boiled egg, cucumber", significance: "National breakfast dish and a cornerstone of Malaysian cuisine." },
+                    { type: "Lunch", local: "Laksa", english: "Spicy Noodle Soup", ingredients: "Rice noodles, chicken or shrimp, coconut milk, curry spices", significance: "A spicy and aromatic noodle soup." },
+                    { type: "Dinner", local: "Roti Canai with Dal", english: "Flatbread with Lentil Curry", ingredients: "Flatbread, lentil curry", significance: "A classic dinner staple." }
+                ],
+                "Mongolia": [
+                    { type: "Breakfast", local: "Tsai", english: "Milk Tea", ingredients: "Black tea, milk, salt", significance: "Traditional morning drink." },
+                    { type: "Lunch", local: "Buuz", english: "Steamed Dumplings", ingredients: "Dough, minced mutton or beef, onion, garlic", significance: "A festive lunch dish." },
+                    { type: "Dinner", local: "Khorkhog", english: "Meat and Vegetable Stew", ingredients: "Meat, vegetables, hot stones", significance: "A traditional celebratory dinner." }
+                ],
+                "Nepal": [
+                    { type: "Breakfast", local: "Sel Roti", english: "Rice Flour Doughnut", ingredients: "Rice flour, water, sugar", significance: "Sweet breakfast." },
+                    { type: "Lunch", local: "Dal Bhat", english: "Lentil Soup with Rice", ingredients: "Lentil soup, steamed rice, vegetable curry", significance: "National lunch dish." },
+                    { type: "Dinner", local: "Momo", english: "Steamed Dumplings", ingredients: "Dough, minced meat or vegetables", significance: "Popular dinner food." }
+                ],
+                "Pakistan": [
+                    { type: "Breakfast", local: "Halwa Poori", english: "Fried Bread with Sweet Pudding", ingredients: "Fried bread, semolina pudding, chickpea curry", significance: "A popular celebratory breakfast." },
+                    { type: "Lunch", local: "Biryani", english: "Spiced Rice Dish", ingredients: "Basmati rice, meat, yogurt, spices", significance: "An iconic and flavorful lunch dish." },
+                    { type: "Dinner", local: "Nihari", english: "Slow-Cooked Meat Stew", ingredients: "Beef/lamb shank, spices", significance: "A hearty and popular dinner dish." }
+                ],
+                "Philippines": [
+                    { type: "Breakfast", local: "Tapsilog", english: "Dried Beef with Garlic Rice and Egg", ingredients: "Dried beef, garlic fried rice, fried egg", significance: "A staple breakfast combo." },
+                    { type: "Lunch", local: "Adobo", english: "Braised Meat", ingredients: "Pork/chicken, soy sauce, vinegar, garlic, peppercorns", significance: "National dish, a popular lunch." },
+                    { type: "Dinner", local: "Sinigang", english: "Sour Soup", ingredients: "Meat/fish, vegetables, tamarind broth", significance: "A common dinner soup." }
+                ],
+                "Russia": [
+                    { type: "Breakfast", local: "Blini", english: "Pancakes", ingredients: "Flour, eggs, milk, yeast", significance: "Traditional breakfast food." },
+                    { type: "Lunch", local: "Borscht", english: "Beet Soup", ingredients: "Beets, cabbage, potatoes, meat", significance: "National lunch soup." },
+                    { type: "Dinner", local: "Pelmeni", english: "Meat Dumplings", ingredients: "Dough, minced meat", significance: "Popular dinner food." }
+                ],
+                "Saudi Arabia": [
+                    { type: "Breakfast", local: "Foul Medames", english: "Fava Bean Stew", ingredients: "Fava beans, garlic, lemon, olive oil, spices", significance: "A common breakfast dish in the region." },
+                    { type: "Lunch", local: "Kabsa", english: "Rice and Meat Dish", ingredients: "Rice, chicken or lamb, vegetables, spices", significance: "A national dish, often served at lunch." },
+                    { type: "Dinner", local: "Saleeg", english: "Rice Porridge with Milk", ingredients: "Rice, milk, meat broth", significance: "A comforting dinner." }
+                ],
+                "Singapore": [
+                    { type: "Breakfast", local: "Kaya Toast", english: "Toast with Coconut Jam", ingredients: "Bread, coconut jam, butter, soft-boiled eggs", significance: "A classic Singaporean breakfast." },
+                    { type: "Lunch", local: "Chicken Rice", english: "Chicken Rice", ingredients: "Chicken, rice, chili sauce, cucumber", significance: "A famous lunch dish." },
+                    { type: "Dinner", local: "Laksa", english: "Spicy Noodle Soup", ingredients: "Rice noodles, shrimp, chicken, coconut milk, curry spices", significance: "A popular dinner." }
+                ],
+                "South Korea": [
+                    { type: "Breakfast", local: "Juk", english: "Rice Porridge", ingredients: "Rice, vegetables, meat", significance: "A light and comforting breakfast." },
+                    { type: "Lunch", local: "Bibimbap", english: "Mixed Rice with Meat and Vegetables", ingredients: "Rice, various sautéed vegetables, meat, gochujang sauce", significance: "A famous lunch bowl." },
+                    { type: "Dinner", local: "Korean BBQ", english: "Korean Barbecue", ingredients: "Various cuts of meat, lettuce, garlic, kimchi, sauces", significance: "A social and interactive dinner." }
+                ],
+                "Sri Lanka": [
+                    { type: "Breakfast", local: "Hoppers", english: "Bowl-Shaped Pancakes", ingredients: "Rice flour, coconut milk, served with egg or curry", significance: "A popular breakfast food." },
+                    { type: "Lunch", local: "Rice and Curry", english: "Rice and Curry", ingredients: "Rice, various curries (fish, meat, vegetables)", significance: "A staple and a national lunch dish." },
+                    { type: "Dinner", local: "Kottu Roti", english: "Chopped Flatbread", ingredients: "Roti bread, vegetables, meat, spices", significance: "A popular street-food dinner." }
+                ],
+                "Taiwan": [
+                    { type: "Breakfast", local: "Dan Bing", english: "Egg Pancake Roll", ingredients: "Flour, eggs, scallions", significance: "A common breakfast item." },
+                    { type: "Lunch", local: "Beef Noodle Soup", english: "Beef Noodle Soup", ingredients: "Beef, noodles, broth, bok choy", significance: "A famous lunch soup." },
+                    { type: "Dinner", local: "Stinky Tofu", english: "Fermented Tofu", ingredients: "Fermented tofu, various sauces", significance: "A popular night-market dinner." }
+                ],
+                "Thailand": [
+                    { type: "Breakfast", local: "Jok", english: "Rice Porridge", ingredients: "Rice, pork or chicken, egg, ginger, scallions", significance: "A classic breakfast." },
+                    { type: "Lunch", local: "Pad Thai", english: "Stir-Fried Noodles", ingredients: "Rice noodles, tofu or shrimp, peanuts, bean sprouts, chives, tamarind sauce", significance: "A national lunch dish." },
+                    { type: "Dinner", local: "Tom Yum Soup", english: "Hot and Sour Soup", ingredients: "Shrimp, mushrooms, lemongrass, galangal, lime leaves", significance: "A famous and spicy dinner soup." }
+                ],
+                "Turkey": [
+                    { type: "Breakfast", local: "Menemen (منمن)", english: "Scrambled Eggs with Tomatoes", ingredients: "Eggs, tomatoes, green peppers, onions, olive oil, spices", significance: "A popular breakfast often shared with bread and tea." },
+                    { type: "Lunch", local: "Mercimek Köftesi", english: "Lentil Patties", ingredients: "Red lentils, bulgur, tomato paste, scallion, parsley, spices", significance: "Healthy street/mezze item often eaten as a light lunch." },
+                    { type: "Dinner", local: "İskender Kebab", english: "Doner over Bread with Tomato Sauce", ingredients: "Sliced lamb/beef doner, yogurt, tomato butter sauce, pita/bread", significance: "Famous Bursa specialty enjoyed as a hearty dinner." }
+                ],
+                "United Arab Emirates": [
+                    { type: "Breakfast", local: "Chebab with Date Syrup", english: "Emirati Pancakes with Dates", ingredients: "Flour, coconut milk, cardamom, served with date syrup or honey", significance: "Local breakfast sweet tied to date culture and hospitality." },
+                    { type: "Lunch", local: "Al Harees", english: "Wheat and Meat Porridge", ingredients: "Cracked wheat, meat (chicken/lamb), ghee, salt", significance: "Traditional dish during Ramadan and celebrations." },
+                    { type: "Dinner", local: "Grilled Hammour with Sidra Salad", english: "Local Fish with Salad", ingredients: "Hammour (grouper), lemon, olive oil, herbs; sidra leaves or local salad", significance: "Coastal Emirati dinner highlighting local fish species." }
+                ],
+                "Uzbekistan": [
+                    { type: "Breakfast", local: "Non & Tea", english: "Uzbek Flatbread with Tea", ingredients: "Non (lepyoshka bread), tea, cheese or jam", significance: "Bread baked in tandyr (clay oven) is central to hospitality." },
+                    { type: "Lunch", local: "Plov (Osh)", english: "Uzbek Pilaf", ingredients: "Long-grain rice, lamb, carrots, onions, cumin, garlic, fat", significance: "Flagship national dish served at celebrations and gatherings." },
+                    { type: "Dinner", local: "Kazan Kabob", english: "Pot-Cooked Kebab/Stew", ingredients: "Large cuts of meat cooked in a kazan with vegetables and spices", significance: "Hearty communal dish often served at family meals." }
+                ],
+                "Vietnam": [
+                    { type: "Breakfast", local: "Phở", english: "Vietnamese Noodle Soup", ingredients: "Rice noodles, beef or chicken broth, star anise, cinnamon, herbs, lime, bean sprouts", significance: "Iconic Vietnamese breakfast and national dish with regional variations." },
+                    { type: "Lunch", local: "Bánh Mì", english: "Vietnamese Sandwich", ingredients: "Crusty baguette, pickled vegetables, cilantro, chili, pâté or meats", significance: "French colonial influence fused with Vietnamese ingredients; street-food staple." },
+                    { type: "Dinner", local: "Bún Chả", english: "Grilled Pork with Rice Noodles", ingredients: "Grilled pork patties and slices, rice vermicelli, herbs, dipping sauce (nuoc cham)", significance: "Hanoi specialty often eaten for dinner; famous international dish." }
+                ]
+            },
+            "Australia & Oceania": {
+                "Australia": [
+                    { type: "Breakfast", local: "Vegemite Toast", english: "Toast with Yeast Spread", ingredients: "Bread, butter, Vegemite", significance: "Iconic Australian breakfast." },
+                    { type: "Lunch", local: "Meat Pie", english: "Savory Meat Pie", ingredients: "Pastry, beef, gravy", significance: "National lunch food." },
+                    { type: "Dinner", local: "Grilled Kangaroo", english: "Kangaroo Steak", ingredients: "Kangaroo meat, herbs, vegetables", significance: "Protein-rich dinner." }
+                ],
+                "East Timor": [
+                    { type: "Breakfast", local: "Batar Daan", english: "Corn and Pumpkin Porridge", ingredients: "Corn, beans, pumpkin", significance: "Timorese breakfast." },
+                    { type: "Lunch", local: "Ikan Pepes", english: "Banana Leaf Fish", ingredients: "Fish, banana leaves, spices", significance: "Lunch favorite." },
+                    { type: "Dinner", local: "Sakato Stew", english: "Herbal Beef Stew", ingredients: "Beef, basil, garlic, chili", significance: "Dinner dish." }
+                ],
+                "Fiji": [
+                    { type: "Breakfast", local: "Tavioka with Coconut Cream", english: "Cassava with Coconut", ingredients: "Cassava, coconut milk", significance: "Staple breakfast." },
+                    { type: "Lunch", local: "Rourou", english: "Taro Leaf Stew", ingredients: "Taro leaves, coconut cream", significance: "Lunch food." },
+                    { type: "Dinner", local: "Fish Lovo", english: "Earth Oven Fish", ingredients: "Fish, taro, banana leaves", significance: "Feast dinner." }
+                ],
+                "Kiribati": [
+                    { type: "Breakfast", local: "Te Kabubu", english: "Coconut Bread", ingredients: "Flour, coconut, sugar", significance: "Breakfast bread." },
+                    { type: "Lunch", local: "Te Bua Toro", english: "Breadfruit Curry", ingredients: "Breadfruit, fish, coconut milk", significance: "Lunch dish." },
+                    { type: "Dinner", local: "Toddy Fish", english: "Fish in Palm Sap Sauce", ingredients: "Fish, toddy sap, spices", significance: "Dinner stew." }
+                ],
+                "Marshall Islands": [
+                    { type: "Breakfast", local: "Fried Breadfruit", english: "Crispy Breadfruit", ingredients: "Breadfruit, oil, salt", significance: "Breakfast dish." },
+                    { type: "Lunch", local: "Reef Fish Grill", english: "Charcoal Grilled Fish", ingredients: "Reef fish, lime, salt", significance: "Lunch dish." },
+                    { type: "Dinner", local: "Ika Mata", english: "Marinated Raw Fish", ingredients: "Fish, lime juice, coconut milk, onions", significance: "Traditional dinner." }
+                ],
+                "Micronesia": [
+                    { type: "Breakfast", local: "Taro Pancakes", english: "Taro Pancakes", ingredients: "Taro, flour, eggs", significance: "Breakfast food." },
+                    { type: "Lunch", local: "Breadfruit Salad", english: "Breadfruit Salad", ingredients: "Breadfruit, onions, tomatoes, lime", significance: "Lunch food." },
+                    { type: "Dinner", local: "Coconut Crab", english: "Coconut Crab", ingredients: "Coconut crab, spices", significance: "Dinner delicacy." }
+                ],
+                "Nauru": [
+                    { type: "Breakfast", local: "Coconut Fish", english: "Coconut Fish", ingredients: "Fish, coconut milk, spices", significance: "Breakfast fish." },
+                    { type: "Lunch", local: "Fried Rice", english: "Fried Rice", ingredients: "Rice, vegetables, meat", significance: "Lunch food." },
+                    { type: "Dinner", local: "Chicken Curry", english: "Chicken Curry", ingredients: "Chicken, curry powder, coconut milk", significance: "Dinner dish." }
+                ],
+                "New Zealand": [
+                    { type: "Breakfast", local: "Sourdough Toast with Avocado", english: "Avocado Toast", ingredients: "Sourdough bread, avocado, salt, pepper", significance: "Healthy breakfast trend." },
+                    { type: "Lunch", local: "Kiwi Burger", english: "New Zealand Burger", ingredients: "Beef patty, cheese, lettuce, beetroot, fried egg", significance: "Iconic lunch." },
+                    { type: "Dinner", local: "Hāngī", english: "Earth Oven Dinner", ingredients: "Meat (pork/chicken), kumara (sweet potato), vegetables, cooked underground", significance: "Traditional Māori dinner." }
+                ],
+                "Papua New Guinea": [
+                    { type: "Breakfast", local: "Kaukau", english: "Mashed Sweet Potatoes", ingredients: "Sweet potatoes, sugar", significance: "Breakfast staple." },
+                    { type: "Lunch", local: "Mumu Pork", english: "Earth Oven Pork", ingredients: "Pork, taro, greens", significance: "Traditional lunch." },
+                    { type: "Dinner", local: "Banana Sago", english: "Banana Pudding", ingredients: "Banana, sago, coconut milk", significance: "Dinner dessert." }
+                ],
+                "Samoa": [
+                    { type: "Breakfast", local: "Panikeke", english: "Banana Pancakes", ingredients: "Bananas, flour, sugar", significance: "Breakfast snack." },
+                    { type: "Lunch", local: "Sapasu Moa", english: "Chicken Soup", ingredients: "Chicken, ginger, onion", significance: "Lunch soup." },
+                    { type: "Dinner", local: "Umu Feast", english: "Earth Oven Dish", ingredients: "Meat, taro, palusami", significance: "Dinner feast." }
+                ],
+                "Solomon Islands": [
+                    { type: "Breakfast", local: "Coconut Biscuits", english: "Coconut Cookies", ingredients: "Flour, sugar, coconut", significance: "Breakfast treat." },
+                    { type: "Lunch", local: "Poi with Fish", english: "Taro & Fish Dish", ingredients: "Taro, fish, lime", significance: "Lunch dish." },
+                    { type: "Dinner", local: "Grilled Shellfish", english: "Shellfish Plate", ingredients: "Shellfish, lime, herbs", significance: "Dinner food." }
+                ],
+                "Tonga": [
+                    { type: "Breakfast", local: "Keke 'Isite", english: "Island Donuts", ingredients: "Flour, sugar, coconut oil", significance: "Breakfast food." },
+                    { type: "Lunch", local: "Lu Sipi", english: "Lamb Taro Wraps", ingredients: "Lamb, taro leaves, coconut cream", significance: "Lunch dish." },
+                    { type: "Dinner", local: "Otai", english: "Fruit Drink", ingredients: "Watermelon, pineapple, coconut", significance: "Dinner side." }
+                ],
+                "Tuvalu": [
+                    { type: "Breakfast", local: "Coconut Rice", english: "Rice with Coconut Milk", ingredients: "Rice, coconut milk", significance: "Breakfast food." },
+                    { type: "Lunch", local: "Pulaka Stew", english: "Root Crop Stew", ingredients: "Pulaka, onions, coconut cream", significance: "Lunch dish." },
+                    { type: "Dinner", local: "Toddy Fish Curry", english: "Fish Curry with Palm Sap", ingredients: "Fish, toddy, spices", significance: "Dinner staple." }
+                ],
+                "Vanuatu": [
+                    { type: "Breakfast", local: "Tuluk", english: "Cassava Dumpling", ingredients: "Cassava, meat, coconut milk", significance: "Breakfast food." },
+                    { type: "Lunch", local: "Laplap", english: "Root Vegetable Pudding", ingredients: "Yam/taro, coconut milk, meat/fish", significance: "National dish." },
+                    { type: "Dinner", local: "Green Papaya Salad", english: "Green Papaya Salad", ingredients: "Green papaya, chili, lime, peanuts", significance: "Dinner salad." }
+                ]
+            },
+            "Antarctica": {
+                "Research Stations (International)": [
+                    { type: "Breakfast", local: "Oatmeal with Fruit & Nuts", english: "Oatmeal with Fruit & Nuts", ingredients: "Oats, dried fruit, nuts, cinnamon", significance: "A hearty breakfast to fuel a day in the cold." },
+                    { type: "Lunch", local: "Hearty Vegetable Soup", english: "Hearty Vegetable Soup", ingredients: "Frozen mixed veg, potato, onion, garlic, broth", significance: "A warming and nutritious meal from station supplies." },
+                    { type: "Dinner", local: "Baked Salmon (Supply)", english: "Baked Salmon (Supply)", ingredients: "Frozen salmon, lemon, garlic, olive oil", significance: "A supply-based special, highlighting preserved ingredients." }
+                ]
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const continentSelect = document.getElementById('continent-select');
+            const countrySelect = document.getElementById('country-select');
+            const mealsOutput = document.getElementById('meals-output');
+
+            // Populate the continent dropdown
+            Object.keys(foodData).forEach(continent => {
+                const option = document.createElement('option');
+                option.value = continent;
+                option.textContent = continent;
+                continentSelect.appendChild(option);
+            });
+
+            // Handle continent selection
+            continentSelect.addEventListener('change', (event) => {
+                const selectedContinent = event.target.value;
+                countrySelect.innerHTML = '<option value="">-- Choose a Country --</option>';
+                mealsOutput.innerHTML = '';
+                countrySelect.disabled = true;
+
+                if (selectedContinent) {
+                    const countries = Object.keys(foodData[selectedContinent]);
+                    countries.forEach(country => {
+                        const option = document.createElement('option');
+                        option.value = country;
+                        option.textContent = country;
+                        countrySelect.appendChild(option);
+                    });
+                    countrySelect.disabled = false;
+                }
+            });
+
+            // Handle country selection
+            countrySelect.addEventListener('change', (event) => {
+                const selectedCountry = event.target.value;
+                mealsOutput.innerHTML = '';
+
+                if (selectedCountry) {
+                    const meals = foodData[continentSelect.value][selectedCountry];
+                    meals.forEach(meal => {
+                        const mealCard = document.createElement('div');
+                        mealCard.className = 'bg-amber-100 p-6 rounded-xl shadow-inner border border-amber-300';
+                        mealCard.innerHTML = `
+                            <h3 class="text-xl font-bold text-amber-950 mb-2">${meal.type}</h3>
+                            <div class="space-y-2 text-sm text-amber-800">
+                                <p><strong class="font-semibold text-amber-900">English Name:</strong> ${meal.english}</p>
+                                <p><strong class="font-semibold text-amber-900">Local Name:</strong> ${meal.local}</p>
+                                <p><strong class="font-semibold text-amber-900">Ingredients:</strong> ${meal.ingredients}</p>
+                                <p><strong class="font-semibold text-amber-900">Cultural Significance:</strong> ${meal.significance}</p>
+                            </div>
+                        `;
+                        mealsOutput.appendChild(mealCard);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
